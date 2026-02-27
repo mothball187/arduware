@@ -1,0 +1,7 @@
+arduino-cli.exe
+arduino-cli.zip
+build/
+*.hex
+*.elf
+*.eep
+.vscode/
