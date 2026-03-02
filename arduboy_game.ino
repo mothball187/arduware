@@ -194,8 +194,8 @@ enum MenuOption {
 };
 
 // --- DEBUG VARIABLES ---
-bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_MARSHMALLOW_DROP;
+bool DEBUG_MODE_ENABLED = true;
+MiniGameState DEBUG_MINIGAME = GAME_ARROWS;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -331,7 +331,11 @@ void doIntermission() {
     if (DEBUG_MODE_ENABLED) {
       currentMiniGame = DEBUG_MINIGAME;
     } else {
-      currentMiniGame = (MiniGameState)random(NUM_GAMES);
+      MiniGameState nextGame;
+      do {
+        nextGame = (MiniGameState)random(NUM_GAMES);
+      } while (nextGame == currentMiniGame);
+      currentMiniGame = nextGame;
     }
     intermissionTime = 0;
     gameState = STATE_GAMEPLAY;
@@ -393,7 +397,11 @@ void doMainMenu() {
       if (DEBUG_MODE_ENABLED) {
         currentMiniGame = DEBUG_MINIGAME;
       } else {
-        currentMiniGame = (MiniGameState)random(NUM_GAMES);
+        MiniGameState nextGame;
+        do {
+          nextGame = (MiniGameState)random(NUM_GAMES);
+        } while (nextGame == currentMiniGame);
+        currentMiniGame = nextGame;
       }
       break;
     case MENU_SETTINGS:

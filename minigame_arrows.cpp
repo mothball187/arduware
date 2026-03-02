@@ -14,6 +14,7 @@ extern const uint8_t PROGMEM a_button[];
 extern const uint8_t PROGMEM b_button[];
 extern const uint8_t PROGMEM button_filled[];
 extern const unsigned char PROGMEM bubbleburst[];
+extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
 
 unsigned int arrowsGame_lastSpawnTime = 0;
@@ -41,9 +42,8 @@ void arrowsGameAnimateSprites() {
   if (arrowsGame_bubblePos[0] >= 0) {
     if (arrowsGame_bubblePos[2] < 7) {
       Sprites::drawExternalMask(
-          arrowsGame_bubblePos[0], arrowsGame_bubblePos[1],
-          bubbleburst + (arrowsGame_bubblePos[2] * 32),
-          bubbleburst + (arrowsGame_bubblePos[2] * 32), 0, 0);
+          arrowsGame_bubblePos[0], arrowsGame_bubblePos[1], bubbleburst,
+          bubbleburst_mask, arrowsGame_bubblePos[2], arrowsGame_bubblePos[2]);
       arrowsGame_bubblePos[2] += 1;
     } else {
       arrowsGame_bubblePos[0] = -1;
@@ -52,9 +52,8 @@ void arrowsGameAnimateSprites() {
     }
   } else if (arrowsGame_XPos[0] >= 0) {
     if (arrowsGame_XPos[2] / 2 < 1) { // 2 == hold length
-      Sprites::drawExternalMask(arrowsGame_XPos[0], arrowsGame_XPos[1],
-                                X + (arrowsGame_XPos[2] / 2 * 32),
-                                X + (arrowsGame_XPos[2] / 2 * 32), 0, 0);
+      Sprites::drawExternalMask(arrowsGame_XPos[0], arrowsGame_XPos[1], X, X,
+                                arrowsGame_XPos[2] / 2, arrowsGame_XPos[2] / 2);
       arrowsGame_XPos[2] += 1;
     } else {
       arrowsGame_XPos[0] = -1;
@@ -162,7 +161,7 @@ void doArrowsGame() {
   if (arrowsGame_spawnPos[0] >= 0) {
     Sprites::drawExternalMask(arrowsGame_spawnPos[0], arrowsGame_spawnPos[1],
                               spawnBmp, spawnBmp + 2, 0, 0);
-    arrowsGame_spawnPos[1] += 2;
+    arrowsGame_spawnPos[1] += 3;
     if (arrowsGame_spawnPos[1] >= MAX_Y_POS) {
       arrowsGameDespawn();
     }
