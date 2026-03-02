@@ -44,7 +44,7 @@ extern MiniGameState currentMiniGame;
 // --- LED MANAGEMENT CONSTANTS ---
 const uint8_t COLOR_GREEN = 0;
 const uint8_t COLOR_RED = 1;
-extern void turnOnLED(uint8_t color);
+extern void turnOnLED(uint8_t color, unsigned int duration = 250);
 
 // --- BITMAPS ---
 extern const unsigned char PROGMEM background[];

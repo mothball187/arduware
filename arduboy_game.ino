@@ -195,7 +195,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = true;
-MiniGameState DEBUG_MINIGAME = GAME_ARROWS;
+MiniGameState DEBUG_MINIGAME = GAME_MAKE_IT_HOT;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -214,8 +214,9 @@ void doMarshmallowDropGame();
 // --- LED MANAGEMENT ---
 unsigned long ledTurnOnTime = 0;
 bool isLedOn = false;
+unsigned int currentLedDuration = 250;
 
-void turnOnLED(uint8_t color) {
+void turnOnLED(uint8_t color, unsigned int duration) {
   if (color == COLOR_GREEN) {
     arduboy.setRGBled(0, 255, 0);
     // High, short beep for success
@@ -227,6 +228,7 @@ void turnOnLED(uint8_t color) {
   }
   isLedOn = true;
   ledTurnOnTime = millis();
+  currentLedDuration = duration;
 }
 
 void turnOffLED() {
@@ -251,8 +253,8 @@ void loop() {
   arduboy.clear();
   arduboy.pollButtons();
 
-  // Check LED timeout (250ms now)
-  if (isLedOn && (millis() - ledTurnOnTime >= 250)) {
+  // Check LED timeout
+  if (isLedOn && (millis() - ledTurnOnTime >= currentLedDuration)) {
     turnOffLED();
   }
 

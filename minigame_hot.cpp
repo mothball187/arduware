@@ -3,39 +3,15 @@
 float makeItHot_progress = 0;
 bool makeItHot_newGame = true;
 unsigned long makeItHot_timer = 0;
-bool makeItHot_failedState = false;
-bool makeItHot_successState = false;
-unsigned long makeItHot_stateTimer = 0;
+uint8_t makeItHot_sectionsPassed = 0;
 
 void doMakeItHotGame() {
-  if (makeItHot_failedState) {
-    arduboy.setCursor(50, 30);
-    arduboy.print(F("FAIL!"));
-    if (millis() - makeItHot_stateTimer >= 2000) {
-      makeItHot_failedState = false;
-      makeItHot_newGame = true;
-      gameState = STATE_INTERMISSION;
-    }
-    return;
-  }
-
-  if (makeItHot_successState) {
-    arduboy.setCursor(40, 30);
-    arduboy.print(F("SUCCESS!"));
-    if (millis() - makeItHot_stateTimer >= 2000) {
-      makeItHot_successState = false;
-      makeItHot_newGame = true;
-      gameState = STATE_INTERMISSION;
-    }
-    return;
-  }
 
   if (makeItHot_newGame) {
     makeItHot_progress = 0;
     makeItHot_timer = millis();
+    makeItHot_sectionsPassed = 0;
     makeItHot_newGame = false;
-    makeItHot_failedState = false;
-    makeItHot_successState = false;
   }
 
   // Calculate remaining time
@@ -96,20 +72,35 @@ void doMakeItHotGame() {
     arduboy.fillRect(therm_x + 1, fill_y, therm_w - 2, fill_h, WHITE);
   }
 
-  // Win condition: fill it entirely before time runs out
-  if (makeItHot_progress >= 100) {
-    score += 15;
-    turnOnLED(COLOR_GREEN);
-    makeItHot_successState = true;
-    makeItHot_stateTimer = millis();
-    return;
+  // Draw section lines with dynamic colors
+  // The line is covered if the top of the fluid (fill_y) is less than or equal
+  // to the line's Y pos
+  int fill_y = therm_y + therm_h - fill_h;
+  arduboy.drawFastHLine(therm_x + 1, therm_y + 24, therm_w - 2,
+                        (fill_h > 0 && fill_y <= therm_y + 24) ? BLACK : WHITE);
+  arduboy.drawFastHLine(therm_x + 1, therm_y + 16, therm_w - 2,
+                        (fill_h > 0 && fill_y <= therm_y + 16) ? BLACK : WHITE);
+  arduboy.drawFastHLine(therm_x + 1, therm_y + 8, therm_w - 2,
+                        (fill_h > 0 && fill_y <= therm_y + 8) ? BLACK : WHITE);
+
+  // Check section thresholds
+  int current_section = makeItHot_progress / 25;
+  if (current_section > 4)
+    current_section = 4; // cap at 4
+
+  if (current_section > makeItHot_sectionsPassed) {
+    // Award 10 points for every new section reached live
+    int sections_new = current_section - makeItHot_sectionsPassed;
+    score += (sections_new * 10);
+
+    makeItHot_sectionsPassed = current_section;
+    turnOnLED(COLOR_GREEN, 1000);
   }
 
-  // Lose condition: run out of time
+  // End condition: run out of time
   if (time_remaining <= 0) {
-    turnOnLED(COLOR_RED);
-    makeItHot_failedState = true;
-    makeItHot_stateTimer = millis();
+    makeItHot_newGame = true;
+    gameState = STATE_INTERMISSION;
     return;
   }
 }
