@@ -195,12 +195,15 @@ enum MenuOption {
 };
 
 // --- DEBUG VARIABLES ---
-bool DEBUG_MODE_ENABLED = true;
+bool DEBUG_MODE_ENABLED = false;
 MiniGameState DEBUG_MINIGAME = GAME_ROCK;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
     GAME_SIMON; // Initialized properly in doMainMenu
+
+MiniGameState gamePlaylist[NUM_GAMES];
+uint8_t playlistIndex = NUM_GAMES;
 
 // --- HELPER FUNCTION DECLARATIONS ---
 void doSplashScreen();
@@ -213,6 +216,7 @@ void doMakeItHotGame();
 void doMarshmallowDropGame();
 void doRockGame();
 void doTransition();
+void generatePlaylist(MiniGameState previousLastGame);
 
 // --- LED MANAGEMENT ---
 unsigned long ledTurnOnTime = 0;
@@ -237,6 +241,30 @@ void turnOnLED(uint8_t color, unsigned int duration) {
 void turnOffLED() {
   arduboy.setRGBled(0, 0, 0);
   isLedOn = false;
+}
+
+void generatePlaylist(MiniGameState previousLastGame) {
+  // fill array
+  for (uint8_t i = 0; i < NUM_GAMES; i++) {
+    gamePlaylist[i] = (MiniGameState)i;
+  }
+
+  // Fisher-Yates shuffle
+  for (uint8_t i = NUM_GAMES - 1; i > 0; i--) {
+    uint8_t j = random(i + 1);
+    MiniGameState temp = gamePlaylist[i];
+    gamePlaylist[i] = gamePlaylist[j];
+    gamePlaylist[j] = temp;
+  }
+
+  // Make sure first is not previousLastGame
+  if (gamePlaylist[0] == previousLastGame) {
+    uint8_t swapIdx = 1 + random(NUM_GAMES - 1);
+    MiniGameState temp = gamePlaylist[0];
+    gamePlaylist[0] = gamePlaylist[swapIdx];
+    gamePlaylist[swapIdx] = temp;
+  }
+  playlistIndex = 0;
 }
 
 // --- ARDUINO SETUP ---
@@ -342,11 +370,10 @@ void doIntermission() {
     if (DEBUG_MODE_ENABLED) {
       currentMiniGame = DEBUG_MINIGAME;
     } else {
-      MiniGameState nextGame;
-      do {
-        nextGame = (MiniGameState)random(NUM_GAMES);
-      } while (nextGame == currentMiniGame);
-      currentMiniGame = nextGame;
+      if (playlistIndex >= NUM_GAMES) {
+        generatePlaylist(currentMiniGame);
+      }
+      currentMiniGame = gamePlaylist[playlistIndex++];
     }
     intermissionTime = 0;
     gameState = STATE_TRANSITION;
@@ -407,15 +434,11 @@ void doMainMenu() {
     case MENU_START_GAME:
       gameState = STATE_TRANSITION;
       // Game specific setup (e.g., reset player position, score = 0)
-      // resetGameVariables();
       if (DEBUG_MODE_ENABLED) {
         currentMiniGame = DEBUG_MINIGAME;
       } else {
-        MiniGameState nextGame;
-        do {
-          nextGame = (MiniGameState)random(NUM_GAMES);
-        } while (nextGame == currentMiniGame);
-        currentMiniGame = nextGame;
+        generatePlaylist(currentMiniGame);
+        currentMiniGame = gamePlaylist[playlistIndex++];
       }
       break;
     case MENU_SETTINGS:
