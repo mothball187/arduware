@@ -194,7 +194,7 @@ enum MenuOption {
 };
 
 // --- DEBUG VARIABLES ---
-bool DEBUG_MODE_ENABLED = true;
+bool DEBUG_MODE_ENABLED = false;
 MiniGameState DEBUG_MINIGAME = GAME_MAKE_IT_HOT;
 
 MenuOption currentMenuOption = MENU_START_GAME;
@@ -302,6 +302,9 @@ void doSplashScreen() {
 
   // Transition logic for this state: wait for a button press
   if (arduboy.justPressed(A_BUTTON | B_BUTTON)) {
+    // Re-seed the RNG with the exact millisecond the user pressed the button
+    // This is essentially true human entropy.
+    randomSeed(millis());
     gameState = STATE_MAIN_MENU;
     // Optionally reset menu cursor here if needed
     currentMenuOption = MENU_START_GAME;
@@ -391,6 +394,9 @@ void doMainMenu() {
 
   // Handle selection (A/B button) and transition to the next state
   if (arduboy.justPressed(A_BUTTON | B_BUTTON)) {
+    // Inject human entropy again
+    randomSeed(random() + millis());
+
     switch (currentMenuOption) {
     case MENU_START_GAME:
       gameState = STATE_GAMEPLAY;
