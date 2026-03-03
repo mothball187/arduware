@@ -7,6 +7,7 @@
 #include "minigame_arrows.h"
 #include "minigame_hot.h"
 #include "minigame_marshmallow.h"
+#include "minigame_rock.h"
 #include "minigame_simon.h"
 #include "minigame_spotlight.h"
 
@@ -194,8 +195,8 @@ enum MenuOption {
 };
 
 // --- DEBUG VARIABLES ---
-bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_MAKE_IT_HOT;
+bool DEBUG_MODE_ENABLED = true;
+MiniGameState DEBUG_MINIGAME = GAME_ROCK;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -210,6 +211,7 @@ void doGameOver();
 void checkTransition();
 void doMakeItHotGame();
 void doMarshmallowDropGame();
+void doRockGame();
 void doTransition();
 
 // --- LED MANAGEMENT ---
@@ -467,29 +469,43 @@ void doTransition() {
 
   // Determine the word based on the selected minigame
   const __FlashStringHelper *wordToDisplay;
+  uint8_t wordLength = 0;
+
   switch (currentMiniGame) {
   case GAME_ARROWS:
     wordToDisplay = F("Buttons!");
+    wordLength = 8;
     break;
   case GAME_MAKE_IT_HOT:
     wordToDisplay = F("Smash!");
+    wordLength = 6;
     break;
   case GAME_MARSHMALLOW_DROP:
     wordToDisplay = F("Catch!");
+    wordLength = 6;
     break;
   case GAME_SPOTLIGHT:
     wordToDisplay = F("Chase!");
+    wordLength = 6;
     break;
   case GAME_SIMON:
     wordToDisplay = F("Repeat!");
+    wordLength = 7;
+    break;
+  case GAME_ROCK:
+    wordToDisplay = F("Rock!");
+    wordLength = 5;
     break;
   default:
     wordToDisplay = F("Get Ready!");
+    wordLength = 10;
     break;
   }
 
   // Draw the word centered
-  arduboy.setCursor(MAX_X_POS / 2 - 25, MAX_Y_POS / 2 - 4);
+  // Arduboy standard font characters are 6 pixels wide (5px char + 1px space)
+  uint8_t textWidth = wordLength * 6;
+  arduboy.setCursor((MAX_X_POS - textWidth) / 2, MAX_Y_POS / 2 - 4);
   arduboy.print(wordToDisplay);
 
   // Wait for 2 seconds (2000 milliseconds)
@@ -522,6 +538,9 @@ void doGameplay() {
     break;
   case GAME_MARSHMALLOW_DROP:
     doMarshmallowDropGame();
+    break;
+  case GAME_ROCK:
+    doRockGame();
     break;
   default:
     // Should never happen, but useful for debugging
