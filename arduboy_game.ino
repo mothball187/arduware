@@ -210,6 +210,7 @@ void doGameOver();
 void checkTransition();
 void doMakeItHotGame();
 void doMarshmallowDropGame();
+void doTransition();
 
 // --- LED MANAGEMENT ---
 unsigned long ledTurnOnTime = 0;
@@ -268,6 +269,9 @@ void loop() {
     break;
   case STATE_INTERMISSION:
     doIntermission();
+    break;
+  case STATE_TRANSITION:
+    doTransition();
     break;
   case STATE_GAMEPLAY:
     doGameplay();
@@ -343,7 +347,7 @@ void doIntermission() {
       currentMiniGame = nextGame;
     }
     intermissionTime = 0;
-    gameState = STATE_GAMEPLAY;
+    gameState = STATE_TRANSITION;
     break;
   default:
     break;
@@ -399,7 +403,7 @@ void doMainMenu() {
 
     switch (currentMenuOption) {
     case MENU_START_GAME:
-      gameState = STATE_GAMEPLAY;
+      gameState = STATE_TRANSITION;
       // Game specific setup (e.g., reset player position, score = 0)
       // resetGameVariables();
       if (DEBUG_MODE_ENABLED) {
@@ -452,6 +456,46 @@ void doSettings() {
   // Transition logic: Back to main menu
   if (arduboy.justPressed(B_BUTTON)) {
     gameState = STATE_MAIN_MENU;
+  }
+}
+
+unsigned long transitionStartTime = 0;
+void doTransition() {
+  if (transitionStartTime == 0) {
+    transitionStartTime = millis();
+  }
+
+  // Determine the word based on the selected minigame
+  const __FlashStringHelper *wordToDisplay;
+  switch (currentMiniGame) {
+  case GAME_ARROWS:
+    wordToDisplay = F("Buttons!");
+    break;
+  case GAME_MAKE_IT_HOT:
+    wordToDisplay = F("Smash!");
+    break;
+  case GAME_MARSHMALLOW_DROP:
+    wordToDisplay = F("Catch!");
+    break;
+  case GAME_SPOTLIGHT:
+    wordToDisplay = F("Chase!");
+    break;
+  case GAME_SIMON:
+    wordToDisplay = F("Repeat!");
+    break;
+  default:
+    wordToDisplay = F("Get Ready!");
+    break;
+  }
+
+  // Draw the word centered
+  arduboy.setCursor(MAX_X_POS / 2 - 25, MAX_Y_POS / 2 - 4);
+  arduboy.print(wordToDisplay);
+
+  // Wait for 2 seconds (2000 milliseconds)
+  if (millis() - transitionStartTime >= 2000) {
+    transitionStartTime = 0;
+    gameState = STATE_GAMEPLAY;
   }
 }
 

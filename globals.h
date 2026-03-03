@@ -19,10 +19,11 @@ enum GameState {
   STATE_SPLASH_SCREEN, // Initial state
   STATE_MAIN_MENU,     // Where the user selects an option
   STATE_INTERMISSION,
-  STATE_GAMEPLAY,  // The main action screen
-  STATE_SETTINGS,  // A simple options screen
-  STATE_GAME_OVER, // End screen
-  NUM_GAME_STATES  // Total count of states (must be last)
+  STATE_TRANSITION, // 2-second word transition screen
+  STATE_GAMEPLAY,   // The main action screen
+  STATE_SETTINGS,   // A simple options screen
+  STATE_GAME_OVER,  // End screen
+  NUM_GAME_STATES   // Total count of states (must be last)
 };
 
 extern GameState gameState;
