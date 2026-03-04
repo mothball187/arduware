@@ -28,8 +28,8 @@ void doDuckHuntGame() {
       ducks[i].active = true;
       ducks[i].x = random(0, 112);
       ducks[i].y = random(0, 48);
-      ducks[i].vx = random(1, 4) * (random(2) == 0 ? 1 : -1);
-      ducks[i].vy = random(1, 4) * (random(2) == 0 ? 1 : -1);
+      ducks[i].vx = random(1, 3) * (random(2) == 0 ? 1 : -1);
+      ducks[i].vy = random(1, 3) * (random(2) == 0 ? 1 : -1);
       ducks[i].evadeTimer = random(10, 30);
     }
     duckHunt_newGame = false;
@@ -71,7 +71,7 @@ void doDuckHuntGame() {
       // Evade crosshair based on distance
       int16_t distX = ducks[i].x - duck_crosshairX;
       int16_t distY = ducks[i].y - duck_crosshairY;
-      int evasionSpeed = random(1, 4);
+      int evasionSpeed = random(1, 3);
 
       ducks[i].vx = (distX > 0) ? evasionSpeed : -evasionSpeed;
       ducks[i].vy = (distY > 0) ? evasionSpeed : -evasionSpeed;
