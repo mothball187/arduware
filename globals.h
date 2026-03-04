@@ -36,6 +36,7 @@ enum MiniGameState {
   GAME_MARSHMALLOW_DROP,
   GAME_ROCK,
   GAME_DUCK_HUNT,
+  GAME_SPACE_DODGE,
   NUM_GAMES
 };
 
@@ -66,6 +67,11 @@ extern const uint8_t PROGMEM button_filled[];
 extern const uint8_t PROGMEM duck_right[];
 extern const uint8_t PROGMEM duck_left[];
 extern const uint8_t PROGMEM crosshairs[];
+extern const uint8_t PROGMEM spaceship[];
+extern const uint8_t PROGMEM asteroid_4[];
+extern const uint8_t PROGMEM asteroid_8[];
+extern const uint8_t PROGMEM asteroid_12[];
+extern const uint8_t PROGMEM asteroid_16[];
 extern const unsigned char PROGMEM bubbleburst[];
 extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
