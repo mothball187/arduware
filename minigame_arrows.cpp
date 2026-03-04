@@ -91,7 +91,7 @@ void arrowsGameHit() {
 }
 
 void doArrowsGame() {
-  const uint8_t *spawnBmp;
+  static const uint8_t *spawnBmp = left_arrow;
   if (arrowsGame_spawnTotal >= arrowsGame_numArrows &&
       arrowsGame_spawnPos[0] == -1 && arrowsGame_bubblePos[0] == -1 &&
       arrowsGame_XPos[0] == -1) {

@@ -35,6 +35,7 @@ enum MiniGameState {
   GAME_MAKE_IT_HOT,
   GAME_MARSHMALLOW_DROP,
   GAME_ROCK,
+  GAME_DUCK_HUNT,
   NUM_GAMES
 };
 
@@ -47,6 +48,7 @@ extern MiniGameState currentMiniGame;
 const uint8_t COLOR_GREEN = 0;
 const uint8_t COLOR_RED = 1;
 extern void turnOnLED(uint8_t color, unsigned int duration = 250);
+extern void turnOffLED();
 
 // --- BITMAPS ---
 extern const unsigned char PROGMEM background[];
@@ -61,6 +63,9 @@ extern const uint8_t PROGMEM up_arrow_hollow[];
 extern const uint8_t PROGMEM a_button[];
 extern const uint8_t PROGMEM b_button[];
 extern const uint8_t PROGMEM button_filled[];
+extern const uint8_t PROGMEM duck_right[];
+extern const uint8_t PROGMEM duck_left[];
+extern const uint8_t PROGMEM crosshairs[];
 extern const unsigned char PROGMEM bubbleburst[];
 extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
