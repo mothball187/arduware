@@ -3,7 +3,7 @@
 
 bool lockpick_newGame = true;
 unsigned long lockpick_timer = 0;
-unsigned long lockpick_lastScoreSecond =
+uint8_t lockpick_lastScoreSecond =
     0;                       // Tracks the last whole second we deducted points
 float lockpick_pinAngle = 0; // 0 = straight up, ranges roughly -PI/2 to PI/2
 float lockpick_targetAngle = 0;
@@ -75,7 +75,7 @@ void doLockpickGame() {
   // --- TIMER & SCORING ---
 
   unsigned long elapsed = millis() - lockpick_timer;
-  unsigned long currentSeconds = elapsed / 1000;
+  uint8_t currentSeconds = (uint8_t)(elapsed / 1000);
 
   if (currentSeconds > lockpick_lastScoreSecond && currentSeconds < 10) {
     score = max(0, score - 10);
@@ -104,9 +104,9 @@ void doLockpickGame() {
   // --- DRAWING ---
 
   // Center of lock mechanism
-  int cx = MAX_X_POS / 2;
-  int cy = MAX_Y_POS / 2 + 10; // offset down a bit
-  int radius = 20;
+  int8_t cx = MAX_X_POS / 2;
+  int8_t cy = MAX_Y_POS / 2 + 10; // offset down a bit
+  int8_t radius = 20;
 
   // Draw Cylinder
   arduboy.drawCircle(cx, cy, radius, WHITE);
@@ -115,10 +115,10 @@ void doLockpickGame() {
   // Calculate Keyhole rotation based on cylinder
   // Keyhole at rest is a vertical line. Cylinder turn goes clockwise.
   float keyholeAngle = lockpick_cylinderAngle;
-  int kx1 = cx + sin(keyholeAngle) * (-10);
-  int ky1 = cy - cos(keyholeAngle) * (-10);
-  int kx2 = cx + sin(keyholeAngle) * (10);
-  int ky2 = cy - cos(keyholeAngle) * (10);
+  int8_t kx1 = cx + sin(keyholeAngle) * (-10);
+  int8_t ky1 = cy - cos(keyholeAngle) * (-10);
+  int8_t kx2 = cx + sin(keyholeAngle) * (10);
+  int8_t ky2 = cy - cos(keyholeAngle) * (10);
   arduboy.drawLine(kx1, ky1, kx2, ky2, WHITE);
 
   // Calculate Bobby Pin rotation (moves with cylinder tension!)
@@ -137,8 +137,8 @@ void doLockpickGame() {
     }
   }
 
-  int px = cx + sin(currentPinAngle) * 30; // Pointing upwards mostly
-  int py = cy - cos(currentPinAngle) * 30;
+  int8_t px = cx + sin(currentPinAngle) * 30; // Pointing upwards mostly
+  int8_t py = cy - cos(currentPinAngle) * 30;
 
   arduboy.drawLine(cx, cy - 4, px, py,
                    WHITE); // offset base slightly above keyhole
