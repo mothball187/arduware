@@ -102,7 +102,7 @@ void doSpotlightGame() {
 
     // Averages 1.33, faster than base 1 but slower than 1.5
     int evasionSpeed = 1;
-    if (random(3) == 0) {
+    if (random(5) == 0) {
       evasionSpeed = 2;
     }
 

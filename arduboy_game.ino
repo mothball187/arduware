@@ -234,7 +234,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_LOCKPICK;
+MiniGameState DEBUG_MINIGAME = GAME_ARROWS;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =

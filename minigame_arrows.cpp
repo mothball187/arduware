@@ -21,9 +21,7 @@ unsigned int arrowsGame_lastSpawnTime = 0;
 // number of arrows per game
 uint8_t arrowsGame_numArrows = 10;
 uint8_t arrowsGame_spawnTotal = 0;
-bool arrowsGame_shouldSpawn = true;
 int16_t arrowsGame_targetY = 48;
-uint16_t arrowsGame_target = 6;
 // x locations for the hit targets
 int16_t arrowsGame_leftX = 5;
 int16_t arrowsGame_rightX = 25;
@@ -32,8 +30,16 @@ int16_t arrowsGame_downX = 65;
 int16_t arrowsGame_bX = 105;
 int16_t arrowsGame_aX = 85;
 
-// x,y x is which button it correspond to
-int16_t arrowsGame_spawnPos[] = {-1, -1};
+#define MAX_ACTIVE_ARROWS 4
+struct FallingArrow {
+  bool active;
+  int16_t x;
+  float y;
+  float speed;
+  uint8_t target;
+};
+
+FallingArrow arrowsGame_arrows[MAX_ACTIVE_ARROWS];
 // x,y,frame (4 frames)
 int16_t arrowsGame_bubblePos[] = {-1, -1, 0};
 int16_t arrowsGame_XPos[] = {-1, -1, 0};
@@ -63,82 +69,83 @@ void arrowsGameAnimateSprites() {
   }
 }
 
-void arrowsGameSpawn(int16_t x) {
-  arrowsGame_spawnPos[0] = x;
-  arrowsGame_spawnPos[1] = 0;
-  arrowsGame_shouldSpawn = false;
-  arrowsGame_spawnTotal++;
+void arrowsGameSpawn(int16_t x, uint8_t target) {
+  for (int i = 0; i < MAX_ACTIVE_ARROWS; i++) {
+    if (!arrowsGame_arrows[i].active) {
+      arrowsGame_arrows[i].active = true;
+      arrowsGame_arrows[i].x = x;
+      arrowsGame_arrows[i].y = 0;
+      arrowsGame_arrows[i].target = target;
+      arrowsGame_arrows[i].speed = random(15, 35) / 10.0; // 1.5 to 3.5 speed
+      arrowsGame_spawnTotal++;
+      break;
+    }
+  }
 }
-void arrowsGameDespawn() {
-  arrowsGame_spawnPos[0] = -1;
-  arrowsGame_spawnPos[1] = -1;
-  arrowsGame_shouldSpawn = true;
-}
-void arrowsGameSpawnBubble() {
-  arrowsGame_bubblePos[0] = arrowsGame_spawnPos[0];
-  arrowsGame_bubblePos[1] = arrowsGame_spawnPos[1];
+void arrowsGameDespawn(int i) { arrowsGame_arrows[i].active = false; }
+void arrowsGameSpawnBubble(int i) {
+  arrowsGame_bubblePos[0] = arrowsGame_arrows[i].x;
+  arrowsGame_bubblePos[1] = (int16_t)arrowsGame_arrows[i].y;
   arrowsGame_bubblePos[2] = 0;
 }
-void arrowsGameSpawnX() {
-  arrowsGame_XPos[0] = arrowsGame_spawnPos[0];
-  arrowsGame_XPos[1] = arrowsGame_spawnPos[1];
+void arrowsGameSpawnX(int i) {
+  arrowsGame_XPos[0] = arrowsGame_arrows[i].x;
+  arrowsGame_XPos[1] = (int16_t)arrowsGame_arrows[i].y;
   arrowsGame_XPos[2] = 0;
 }
-void arrowsGameHit() {
+void arrowsGameHit(int i) {
   score += 10;
-  arrowsGameSpawnBubble();
-  arrowsGameDespawn();
+  arrowsGameSpawnBubble(i);
+  arrowsGameDespawn(i);
 }
 
 void doArrowsGame() {
-  static const uint8_t *spawnBmp = left_arrow;
-  if (arrowsGame_spawnTotal >= arrowsGame_numArrows &&
-      arrowsGame_spawnPos[0] == -1 && arrowsGame_bubblePos[0] == -1 &&
-      arrowsGame_XPos[0] == -1) {
-    arrowsGameDespawn();
+  // Check if we finished
+  bool anyActive = false;
+  for (int i = 0; i < MAX_ACTIVE_ARROWS; i++) {
+    if (arrowsGame_arrows[i].active)
+      anyActive = true;
+  }
+
+  if (arrowsGame_spawnTotal >= arrowsGame_numArrows && !anyActive &&
+      arrowsGame_bubblePos[0] == -1 && arrowsGame_XPos[0] == -1) {
+    for (int i = 0; i < MAX_ACTIVE_ARROWS; i++)
+      arrowsGameDespawn(i);
     arrowsGame_spawnTotal = 0;
     arrowsGame_lastSpawnTime = 0;
     gameState = STATE_INTERMISSION;
     return;
   }
 
-  // spawning time
+  // Spawning logic
   if (arrowsGame_spawnTotal < arrowsGame_numArrows) {
-    if (!arrowsGame_lastSpawnTime) {
-      arrowsGame_lastSpawnTime = millis() / 1000;
-    } else if (arrowsGame_shouldSpawn &&
-               millis() / 1000 - arrowsGame_lastSpawnTime > 0) {
-      arrowsGame_lastSpawnTime = millis() / 1000;
-      arrowsGame_target = random(6);
-      switch (arrowsGame_target) {
-      case 0:
-        arrowsGameSpawn(arrowsGame_leftX);
-        spawnBmp = left_arrow;
-        break;
-      case 1:
-        arrowsGameSpawn(arrowsGame_rightX);
-        spawnBmp = right_arrow;
-        break;
-      case 2:
-        arrowsGameSpawn(arrowsGame_upX);
-        spawnBmp = up_arrow;
-        break;
-      case 3:
-        arrowsGameSpawn(arrowsGame_downX);
-        spawnBmp = down_arrow;
-        break;
-      case 4:
-        arrowsGameSpawn(arrowsGame_bX);
-        spawnBmp = b_button;
-        break;
-      case 5:
-        arrowsGameSpawn(arrowsGame_aX);
-        spawnBmp = a_button;
-        break;
-      default:
-        arrowsGameSpawn(arrowsGame_leftX);
-        spawnBmp = left_arrow;
-        break;
+    if (arrowsGame_lastSpawnTime == 0) {
+      arrowsGame_lastSpawnTime = millis();
+    } else {
+      // Spawn occasionally
+      if (millis() - arrowsGame_lastSpawnTime > random(500, 1500)) {
+        arrowsGame_lastSpawnTime = millis();
+        uint8_t target = random(6);
+        switch (target) {
+        case 0:
+          arrowsGameSpawn(arrowsGame_leftX, target);
+          break;
+        case 1:
+          arrowsGameSpawn(arrowsGame_rightX, target);
+          break;
+        case 2:
+          arrowsGameSpawn(arrowsGame_upX, target);
+          break;
+        case 3:
+          arrowsGameSpawn(arrowsGame_downX, target);
+          break;
+        case 4:
+          arrowsGameSpawn(arrowsGame_bX, target);
+          break;
+        case 5:
+          arrowsGameSpawn(arrowsGame_aX, target);
+          break;
+        }
       }
     }
   }
@@ -157,89 +164,86 @@ void doArrowsGame() {
   Sprites::drawExternalMask(arrowsGame_aX, arrowsGame_targetY, a_button,
                             &button_filled[2], 0, 0);
 
-  // draw the spawns
-  if (arrowsGame_spawnPos[0] >= 0) {
-    Sprites::drawExternalMask(arrowsGame_spawnPos[0], arrowsGame_spawnPos[1],
-                              spawnBmp, spawnBmp + 2, 0, 0);
-    arrowsGame_spawnPos[1] += 3;
-    if (arrowsGame_spawnPos[1] >= MAX_Y_POS) {
-      arrowsGameDespawn();
+  // update and draw falling arrows
+  for (int i = 0; i < MAX_ACTIVE_ARROWS; i++) {
+    if (arrowsGame_arrows[i].active) {
+      const uint8_t *spawnBmp;
+      switch (arrowsGame_arrows[i].target) {
+      case 0:
+        spawnBmp = left_arrow;
+        break;
+      case 1:
+        spawnBmp = right_arrow;
+        break;
+      case 2:
+        spawnBmp = up_arrow;
+        break;
+      case 3:
+        spawnBmp = down_arrow;
+        break;
+      case 4:
+        spawnBmp = b_button;
+        break;
+      case 5:
+        spawnBmp = a_button;
+        break;
+      default:
+        spawnBmp = left_arrow;
+        break;
+      }
+
+      Sprites::drawExternalMask(arrowsGame_arrows[i].x,
+                                (int16_t)arrowsGame_arrows[i].y, spawnBmp,
+                                spawnBmp + 2, 0, 0);
+
+      arrowsGame_arrows[i].y += arrowsGame_arrows[i].speed;
+
+      if (arrowsGame_arrows[i].y >= MAX_Y_POS) {
+        arrowsGameDespawn(i);
+      }
     }
   }
 
   // light up the button presses, do collision detection
+  auto handleButtonPress = [](uint8_t buttonId, int16_t buttonX,
+                              const uint8_t *activeSprite,
+                              const uint8_t *activeSpriteMask) {
+    Sprites::drawExternalMask(buttonX, arrowsGame_targetY, activeSprite,
+                              activeSpriteMask, 0, 0);
+    bool hit = false;
+    for (int i = 0; i < MAX_ACTIVE_ARROWS; i++) {
+      if (arrowsGame_arrows[i].active &&
+          arrowsGame_arrows[i].target == buttonId) {
+        if (abs((int16_t)arrowsGame_arrows[i].y - arrowsGame_targetY) <= 8) {
+          turnOnLED(COLOR_GREEN);
+          arrowsGameHit(i);
+          hit = true;
+          break; // only hit one per press
+        }
+      }
+    }
+    if (!hit) {
+      turnOnLED(COLOR_RED);
+      // Spawn an X at the empty button target
+      arrowsGame_XPos[0] = buttonX;
+      arrowsGame_XPos[1] = arrowsGame_targetY;
+      arrowsGame_XPos[2] = 0;
+      score = max(0, score - 5);
+    }
+  };
+
   if (arduboy.justPressed(LEFT_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_leftX, arrowsGame_targetY, left_arrow,
-                              &left_arrow[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_leftX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(0, arrowsGame_leftX, left_arrow, &left_arrow[2]);
   } else if (arduboy.justPressed(RIGHT_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_rightX, arrowsGame_targetY,
-                              right_arrow, &right_arrow[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_rightX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(1, arrowsGame_rightX, right_arrow, &right_arrow[2]);
   } else if (arduboy.justPressed(UP_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_upX, arrowsGame_targetY, up_arrow,
-                              &up_arrow[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_upX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(2, arrowsGame_upX, up_arrow, &up_arrow[2]);
   } else if (arduboy.justPressed(DOWN_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_downX, arrowsGame_targetY, down_arrow,
-                              &down_arrow[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_downX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(3, arrowsGame_downX, down_arrow, &down_arrow[2]);
   } else if (arduboy.justPressed(B_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_bX, arrowsGame_targetY, button_filled,
-                              &button_filled[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_bX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(4, arrowsGame_bX, button_filled, &button_filled[2]);
   } else if (arduboy.justPressed(A_BUTTON)) {
-    Sprites::drawExternalMask(arrowsGame_aX, arrowsGame_targetY, button_filled,
-                              &button_filled[2], 0, 0);
-    if (arrowsGame_spawnPos[0] == arrowsGame_aX &&
-        abs(arrowsGame_spawnPos[1] - 3 - arrowsGame_targetY) <= 5) {
-      turnOnLED(COLOR_GREEN);
-      arrowsGameHit();
-    } else {
-      turnOnLED(COLOR_RED);
-      arrowsGameSpawnX();
-      arrowsGameDespawn();
-    }
+    handleButtonPress(5, arrowsGame_aX, button_filled, &button_filled[2]);
   }
   arrowsGameAnimateSprites();
 }
