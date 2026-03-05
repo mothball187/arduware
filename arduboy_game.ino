@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include "minigame_arrows.h"
+#include "minigame_colorgrid.h"
 #include "minigame_duckhunt.h"
 #include "minigame_hot.h"
 #include "minigame_lockpick.h"
@@ -234,7 +235,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_ARROWS;
+MiniGameState DEBUG_MINIGAME = GAME_COLORGRID;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -256,6 +257,7 @@ void doRockGame();
 void doDuckHuntGame();
 void doSpaceDodgeGame();
 void doLockpickGame();
+void doColorGridGame();
 void doTransition();
 void generatePlaylist(MiniGameState previousLastGame);
 
@@ -378,7 +380,7 @@ void doSplashScreen() {
   // Transition logic for this state: wait for a button press
   if (arduboy.justPressed(A_BUTTON | B_BUTTON)) {
     // Re-seed the RNG with the exact millisecond the user pressed the button
-    // This is essentially true human entropy.
+    // I am not changing this yet, I need to check the build outputs instead.py.
     randomSeed(millis());
     gameState = STATE_MAIN_MENU;
     // Optionally reset menu cursor here if needed
@@ -408,14 +410,10 @@ void doIntermission() {
     arduboy.print(F("1"));
     break;
   case 3:
-    if (DEBUG_MODE_ENABLED) {
-      currentMiniGame = DEBUG_MINIGAME;
-    } else {
-      if (playlistIndex >= NUM_GAMES) {
-        generatePlaylist(currentMiniGame);
-      }
-      currentMiniGame = gamePlaylist[playlistIndex++];
+    if (playlistIndex >= NUM_GAMES) {
+      generatePlaylist(currentMiniGame);
     }
+    currentMiniGame = gamePlaylist[playlistIndex++];
     intermissionTime = 0;
     gameState = STATE_TRANSITION;
     break;
@@ -572,6 +570,10 @@ void doTransition() {
     wordToDisplay = F("Pick!");
     wordLength = 5;
     break;
+  case GAME_COLORGRID:
+    wordToDisplay = F("Colors!");
+    wordLength = 7;
+    break;
   default:
     wordToDisplay = F("Get Ready!");
     wordLength = 10;
@@ -626,6 +628,9 @@ void doGameplay() {
     break;
   case GAME_LOCKPICK:
     doLockpickGame();
+    break;
+  case GAME_COLORGRID:
+    doColorGridGame();
     break;
   default:
     // Should never happen, but useful for debugging
