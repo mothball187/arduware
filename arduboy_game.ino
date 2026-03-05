@@ -10,6 +10,7 @@
 #include "minigame_hot.h"
 #include "minigame_lockpick.h"
 #include "minigame_marshmallow.h"
+#include "minigame_redlightgreenlight.h"
 #include "minigame_rock.h"
 #include "minigame_simon.h"
 #include "minigame_spacedodge.h"
@@ -235,7 +236,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_COLORGRID;
+MiniGameState DEBUG_MINIGAME = GAME_RED_LIGHT_GREEN_LIGHT;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -258,6 +259,7 @@ void doDuckHuntGame();
 void doSpaceDodgeGame();
 void doLockpickGame();
 void doColorGridGame();
+void doRedLightGreenLightGame();
 void doTransition();
 void generatePlaylist(MiniGameState previousLastGame);
 
@@ -410,10 +412,14 @@ void doIntermission() {
     arduboy.print(F("1"));
     break;
   case 3:
-    if (playlistIndex >= NUM_GAMES) {
-      generatePlaylist(currentMiniGame);
+    if (DEBUG_MODE_ENABLED) {
+      currentMiniGame = DEBUG_MINIGAME;
+    } else {
+      if (playlistIndex >= NUM_GAMES) {
+        generatePlaylist(currentMiniGame);
+      }
+      currentMiniGame = gamePlaylist[playlistIndex++];
     }
-    currentMiniGame = gamePlaylist[playlistIndex++];
     intermissionTime = 0;
     gameState = STATE_TRANSITION;
     break;
@@ -574,6 +580,10 @@ void doTransition() {
     wordToDisplay = F("Colors!");
     wordLength = 7;
     break;
+  case GAME_RED_LIGHT_GREEN_LIGHT:
+    wordToDisplay = F("Run!");
+    wordLength = 4;
+    break;
   default:
     wordToDisplay = F("Get Ready!");
     wordLength = 10;
@@ -594,12 +604,10 @@ void doTransition() {
 }
 
 void doGameplay() {
-  char scorefmt[] = "Score: %d";
-  char scoreboard[20];
-  snprintf(scoreboard, sizeof(scoreboard), scorefmt, score);
   // score board remains up for all games
   arduboy.setCursor(0, 0);
-  arduboy.print(scoreboard);
+  arduboy.print(F("Score: "));
+  arduboy.print(score);
 
   switch (currentMiniGame) {
   case GAME_ARROWS:
@@ -631,6 +639,9 @@ void doGameplay() {
     break;
   case GAME_COLORGRID:
     doColorGridGame();
+    break;
+  case GAME_RED_LIGHT_GREEN_LIGHT:
+    doRedLightGreenLightGame();
     break;
   default:
     // Should never happen, but useful for debugging
