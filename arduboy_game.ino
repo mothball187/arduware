@@ -7,6 +7,7 @@
 #include "minigame_arrows.h"
 #include "minigame_duckhunt.h"
 #include "minigame_hot.h"
+#include "minigame_lockpick.h"
 #include "minigame_marshmallow.h"
 #include "minigame_rock.h"
 #include "minigame_simon.h"
@@ -233,7 +234,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_DUCK_HUNT;
+MiniGameState DEBUG_MINIGAME = GAME_LOCKPICK;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -254,6 +255,7 @@ void doMarshmallowDropGame();
 void doRockGame();
 void doDuckHuntGame();
 void doSpaceDodgeGame();
+void doLockpickGame();
 void doTransition();
 void generatePlaylist(MiniGameState previousLastGame);
 
@@ -566,6 +568,10 @@ void doTransition() {
     wordToDisplay = F("Dodge!");
     wordLength = 6;
     break;
+  case GAME_LOCKPICK:
+    wordToDisplay = F("Pick!");
+    wordLength = 5;
+    break;
   default:
     wordToDisplay = F("Get Ready!");
     wordLength = 10;
@@ -617,6 +623,9 @@ void doGameplay() {
     break;
   case GAME_SPACE_DODGE:
     doSpaceDodgeGame();
+    break;
+  case GAME_LOCKPICK:
+    doLockpickGame();
     break;
   default:
     // Should never happen, but useful for debugging

@@ -37,6 +37,7 @@ enum MiniGameState {
   GAME_ROCK,
   GAME_DUCK_HUNT,
   GAME_SPACE_DODGE,
+  GAME_LOCKPICK,
   NUM_GAMES
 };
 

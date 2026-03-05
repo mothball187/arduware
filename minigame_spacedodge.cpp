@@ -12,6 +12,7 @@ struct Asteroid {
   float vx;
   float vy;
   uint8_t sizeType;
+  bool hitPlayer;
 };
 
 Asteroid asteroids[6];
@@ -44,8 +45,10 @@ void spawnAsteroid(int i) {
     asteroids[i].vy = random(-15, 20) / 10.0;
   }
 
-  if (asteroids[i].vx == 0 && asteroids[i].vy == 0)
+  if (asteroids[i].vx == 0 && asteroids[i].vy == 0) {
     asteroids[i].vx = 1.0;
+  }
+  asteroids[i].hitPlayer = false;
 }
 
 void doSpaceDodgeGame() {
@@ -58,6 +61,10 @@ void doSpaceDodgeGame() {
     for (int i = 0; i < 6; i++) {
       spawnAsteroid(i);
     }
+
+    // Grant initial 60 points
+    score += 60;
+
     spaceDodge_newGame = false;
   }
 
@@ -119,7 +126,8 @@ void doSpaceDodgeGame() {
     int hitboxMargin = 2;
     int astMargin =
         astSize > 4 ? 2 : 0; // Don't give margins for the tiny 4x4 asteroid
-    if (spaceDodge_shipX + hitboxMargin <
+    if (!asteroids[i].hitPlayer &&
+        spaceDodge_shipX + hitboxMargin <
             (int16_t)asteroids[i].x + astSize - astMargin &&
         spaceDodge_shipX + 16 - hitboxMargin >
             (int16_t)asteroids[i].x + astMargin &&
@@ -127,7 +135,10 @@ void doSpaceDodgeGame() {
             (int16_t)asteroids[i].y + astSize - astMargin &&
         spaceDodge_shipY + 16 - hitboxMargin >
             (int16_t)asteroids[i].y + astMargin) {
-      hit = true;
+
+      asteroids[i].hitPlayer = true;
+      score = max(0, score - 10);
+      turnOnLED(COLOR_RED, 250); // Red LED and fail sound
     }
   }
 
@@ -136,20 +147,10 @@ void doSpaceDodgeGame() {
                      WHITE);
 
   // Check endings
-  if (hit) {
-    turnOnLED(COLOR_RED, 1000);
+  int currentSecond = (millis() - spaceDodge_timer) / 1000;
+  if (currentSecond >= 6) {
+    turnOffLED();
     spaceDodge_newGame = true;
     gameState = STATE_INTERMISSION;
-  } else {
-    int currentSecond = (millis() - spaceDodge_timer) / 1000;
-    if (currentSecond > spaceDodge_scoreSeconds && currentSecond <= 6) {
-      score += 10;
-      turnOnLED(COLOR_GREEN);
-      spaceDodge_scoreSeconds = currentSecond;
-    }
-    if (currentSecond >= 6) {
-      spaceDodge_newGame = true;
-      gameState = STATE_INTERMISSION;
-    }
   }
 }
