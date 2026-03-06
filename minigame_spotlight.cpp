@@ -91,7 +91,7 @@ void doSpotlightGame() {
       if (millis() - spotlightGame_overlapTime >= 500) {
         score += 10;
         sound.tone(1046, 100);
-        spotlightGame_overlapTime = millis();
+        spotlightGame_overlapTime += 500;
       }
     }
     arduboy.setRGBled(0, 255, 0); // Green
@@ -170,7 +170,7 @@ void doSpotlightGame() {
   }
 
   // 6-second timer check
-  if (millis() - spotlightGame_timer >= 6000) {
+  if (millis() - spotlightGame_timer >= 6100) {
     spotlightGame_newGame = true;
     arduboy.setRGBled(0, 0, 0); // Turn off LED
     gameState = STATE_INTERMISSION;

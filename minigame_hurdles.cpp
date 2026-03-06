@@ -162,7 +162,7 @@ void doHurdlesGame() {
 
   // SCORE LOGIC (Award point every 2s)
   if ((uint16_t)(currentMillis - hurdles_lastScoreTimer) >= 2000) {
-    hurdles_lastScoreTimer = currentMillis;
+    hurdles_lastScoreTimer += 2000;
     score += 10;
     turnOnLED(COLOR_GREEN, 100);
   }
@@ -173,7 +173,7 @@ void doHurdlesGame() {
   }
 
   // WIN LOGIC (End after 12s total)
-  if ((uint16_t)(currentMillis - hurdles_gameStartTimer) >= 12000) {
+  if ((uint16_t)(currentMillis - hurdles_gameStartTimer) >= 12100) {
     turnOffLED();
     hurdles_newGame = true;
     gameState = STATE_INTERMISSION;

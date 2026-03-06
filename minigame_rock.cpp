@@ -37,7 +37,7 @@ void doRockGame() {
     arduboy.setRGBled(0, 0, 0);
   }
 
-  long timeRemaining = 6000 - (millis() - rockGameStartTime);
+  long timeRemaining = 6100 - (millis() - rockGameStartTime);
 
   // If game is over
   if (timeRemaining <= 0) {
@@ -115,7 +115,7 @@ void doRockGame() {
   // Score tracking per second
   unsigned long currentSecond = (millis() - rockGameStartTime) / 1000;
   bool secondRolledOver =
-      (currentSecond > lastScoreSecond && currentSecond < 6);
+      (currentSecond > lastScoreSecond && currentSecond <= 6);
   if (currentSecond > lastScoreSecond) {
     lastScoreSecond = currentSecond;
   }
