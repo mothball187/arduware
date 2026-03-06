@@ -79,11 +79,12 @@ void doHurdlesGame() {
 
   // Input Handling
   if (!hurdles_isJumping && !hurdles_isDucking) {
-    if (arduboy.justPressed(UP_BUTTON)) {
+    if (arduboy.justPressed(UP_BUTTON) || arduboy.justPressed(A_BUTTON)) {
       hurdles_isJumping = true;
       hurdles_jumpTimer = currentMillis;
       hurdles_playerY = groundY - playerNormalH - 18; // Jump height
-    } else if (arduboy.justPressed(DOWN_BUTTON)) {
+    } else if (arduboy.justPressed(DOWN_BUTTON) ||
+               arduboy.justPressed(B_BUTTON)) {
       hurdles_isDucking = true;
       hurdles_duckTimer = currentMillis;
       hurdles_playerY = groundY - (playerNormalH / 2); // Duck height
