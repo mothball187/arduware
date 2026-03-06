@@ -8,6 +8,7 @@
 #include "minigame_colorgrid.h"
 #include "minigame_duckhunt.h"
 #include "minigame_hot.h"
+#include "minigame_hurdles.h"
 #include "minigame_lockpick.h"
 #include "minigame_marshmallow.h"
 #include "minigame_redlightgreenlight.h"
@@ -236,7 +237,7 @@ enum MenuOption {
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
-MiniGameState DEBUG_MINIGAME = GAME_RED_LIGHT_GREEN_LIGHT;
+MiniGameState DEBUG_MINIGAME = GAME_HURDLES;
 
 MenuOption currentMenuOption = MENU_START_GAME;
 MiniGameState currentMiniGame =
@@ -260,6 +261,7 @@ void doSpaceDodgeGame();
 void doLockpickGame();
 void doColorGridGame();
 void doRedLightGreenLightGame();
+void doHurdlesGame();
 void doTransition();
 void generatePlaylist(MiniGameState previousLastGame);
 
@@ -584,6 +586,10 @@ void doTransition() {
     wordToDisplay = F("Run!");
     wordLength = 4;
     break;
+  case GAME_HURDLES:
+    wordToDisplay = F("Jump!");
+    wordLength = 5;
+    break;
   default:
     wordToDisplay = F("Get Ready!");
     wordLength = 10;
@@ -642,6 +648,9 @@ void doGameplay() {
     break;
   case GAME_RED_LIGHT_GREEN_LIGHT:
     doRedLightGreenLightGame();
+    break;
+  case GAME_HURDLES:
+    doHurdlesGame();
     break;
   default:
     // Should never happen, but useful for debugging
