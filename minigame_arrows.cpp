@@ -17,7 +17,8 @@ extern const unsigned char PROGMEM bubbleburst[];
 extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
 
-unsigned int arrowsGame_lastSpawnTime = 0;
+uint16_t arrowsGame_lastSpawnTime = 0;
+uint16_t arrowsGame_nextSpawnDelay = 1000;
 // number of arrows per game
 uint8_t arrowsGame_numArrows = 10;
 uint8_t arrowsGame_spawnTotal = 0;
@@ -76,7 +77,7 @@ void arrowsGameSpawn(int16_t x, uint8_t target) {
       arrowsGame_arrows[i].x = x;
       arrowsGame_arrows[i].y = 0;
       arrowsGame_arrows[i].target = target;
-      arrowsGame_arrows[i].speed = random(15, 35) / 10.0; // 1.5 to 3.5 speed
+      arrowsGame_arrows[i].speed = random(12, 16) / 10.0; // 1.2 to 1.5 speed
       arrowsGame_spawnTotal++;
       break;
     }
@@ -120,11 +121,14 @@ void doArrowsGame() {
   // Spawning logic
   if (arrowsGame_spawnTotal < arrowsGame_numArrows) {
     if (arrowsGame_lastSpawnTime == 0) {
-      arrowsGame_lastSpawnTime = millis();
+      arrowsGame_lastSpawnTime = (uint16_t)millis();
+      arrowsGame_nextSpawnDelay = random(400, 700);
     } else {
-      // Spawn occasionally
-      if (millis() - arrowsGame_lastSpawnTime > random(500, 1500)) {
-        arrowsGame_lastSpawnTime = millis();
+      // Spawn occasionally based on the randomized target delay
+      if ((uint16_t)((uint16_t)millis() - arrowsGame_lastSpawnTime) >
+          arrowsGame_nextSpawnDelay) {
+        arrowsGame_lastSpawnTime = (uint16_t)millis();
+        arrowsGame_nextSpawnDelay = random(400, 700);
         uint8_t target = random(6);
         switch (target) {
         case 0:
