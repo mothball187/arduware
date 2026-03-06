@@ -126,14 +126,14 @@ void doColorGridGame() {
   if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
     if (grid[cursorIndex] != CG_EMPTY) {
       if (grid[cursorIndex] == targetColor) {
-        score += 10;
+        addScore(10);
         sound.tone(1046, 100); // Success sound
         grid[cursorIndex] = CG_EMPTY;
       } else {
         if (score >= 10) {
-          score -= 10;
+          addScore(-10);
         } else {
-          score = 0;
+          addScore(-score);
         }
         sound.tone(130, 250); // Fail sound
         grid[cursorIndex] = CG_EMPTY;

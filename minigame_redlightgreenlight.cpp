@@ -101,7 +101,7 @@ void doRedLightGreenLightGame() {
         pointsEarned += (5 - rem);
       else
         pointsEarned -= rem;
-      score += pointsEarned;
+      addScore(pointsEarned);
 
       turnOnLED(COLOR_RED, 1000);
       rlgl_failedState = true;
@@ -112,7 +112,7 @@ void doRedLightGreenLightGame() {
 
   // Win Condition
   if (rlgl_playerX + 8 >= finishLineX) {
-    score += 100;
+    addScore(100);
     turnOnLED(COLOR_GREEN, 1000);
     turnOffLED();
     rlgl_newGame = true;
@@ -130,7 +130,7 @@ void doRedLightGreenLightGame() {
       pointsEarned += (5 - rem);
     else
       pointsEarned -= rem;
-    score += pointsEarned;
+    addScore(pointsEarned);
 
     turnOffLED();
     rlgl_newGame = true;

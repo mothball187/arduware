@@ -1,7 +1,6 @@
 #include <Arduboy2.h>
 #include <ArduboyTones.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "globals.h"
 #include "minigame_arrows.h"
@@ -12,7 +11,6 @@
 #include "minigame_lockpick.h"
 #include "minigame_marshmallow.h"
 #include "minigame_redlightgreenlight.h"
-#include "minigame_rock.h"
 #include "minigame_simon.h"
 #include "minigame_spacedodge.h"
 #include "minigame_spotlight.h"
@@ -20,7 +18,19 @@
 Arduboy2 arduboy;
 ArduboyTones sound(arduboy.audio.enabled);
 
+GameMode currentGameMode = MODE_SURVIVAL;
 int score = 0;
+int playerHealth = 100;
+int minigamePointsEarned = 0;
+
+void addScore(int points) {
+  if (currentGameMode == MODE_FREEPLAY) {
+    score += points;
+    if (score < 0)
+      score = 0;
+  }
+  minigamePointsEarned += points;
+}
 
 const unsigned char PROGMEM background[] = {
     // width, height,
@@ -252,10 +262,8 @@ void doMainMenu();
 void doSettings();
 void doGameplay();
 void doGameOver();
-void checkTransition();
 void doMakeItHotGame();
 void doMarshmallowDropGame();
-void doRockGame();
 void doDuckHuntGame();
 void doSpaceDodgeGame();
 void doLockpickGame();
@@ -360,8 +368,6 @@ void loop() {
     doGameOver();
     break;
   default:
-    // Should never happen, but useful for debugging
-    arduboy.print("ERROR STATE");
     break;
   }
 
@@ -392,11 +398,63 @@ void doSplashScreen() {
   }
 }
 
+// Survival mode: max points per minigame (indexed by MiniGameState enum order)
+static const uint8_t PROGMEM kMaxPts[] = {
+    100, // GAME_ARROWS         (10 arrows x 10pts)
+    50,  // GAME_SIMON          (5 buttons x 10pts, proportional on partial)
+    120, // GAME_SPOTLIGHT      (10pts/500ms over 6100ms = 12 ticks max)
+    40,  // GAME_MAKE_IT_HOT    (4 sections x 10pts)
+    60,  // GAME_MARSHMALLOW    (6 marshmallows x 10pts)
+    40,  // GAME_DUCK_HUNT      (4 ducks x 10pts)
+    60,  // GAME_SPACE_DODGE    (starts at 60, -10 per asteroid hit)
+    100, // GAME_LOCKPICK       (starts at 100, -10/sec)
+    60,  // GAME_COLORGRID      (6 target squares x 10pts)
+    100, // GAME_RED_LIGHT_GREEN_LIGHT (win=100; fail/timeout capped at 100)
+    50,  // GAME_HURDLES        (10s game, +10 every 2s = 5 ticks max)
+};
+// All games are now proportional (no binary games remaining after Rock removal)
+static const uint8_t PROGMEM kBinary[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+void processMinigameEnd() {
+  if (currentGameMode != MODE_SURVIVAL)
+    return;
+
+  uint8_t idx = (uint8_t)currentMiniGame;
+  if (idx >= NUM_GAMES)
+    return;
+
+  int maxPoints = pgm_read_byte(&kMaxPts[idx]);
+  if (maxPoints <= 0)
+    return;
+
+  int healthToDeduct;
+  if (pgm_read_byte(&kBinary[idx])) {
+    healthToDeduct = (minigamePointsEarned >= maxPoints) ? 0 : 10;
+  } else {
+    int earned = minigamePointsEarned;
+    if (earned < 0)
+      earned = 0;
+    if (earned > maxPoints)
+      earned = maxPoints;
+    healthToDeduct = ((maxPoints - earned) * 50) / maxPoints;
+  }
+
+  playerHealth -= healthToDeduct;
+  if (playerHealth < 0)
+    playerHealth = 0;
+}
+
 int intermissionTime = 0;
 void doIntermission() {
-  turnOffLED(); // Turn off LED
+  turnOffLED();
   if (intermissionTime == 0) {
     intermissionTime = millis() / 1000;
+    processMinigameEnd();
+    if (currentGameMode == MODE_SURVIVAL && playerHealth <= 0) {
+      intermissionTime = 0;
+      gameState = STATE_GAME_OVER;
+      return;
+    }
   }
   arduboy.setCursor(25, MAX_Y_POS / 2 - 10);
   arduboy.print(F("Intermission"));
@@ -480,6 +538,8 @@ void doMainMenu() {
     switch (currentMenuOption) {
     case MENU_START_GAME:
       gameState = STATE_TRANSITION;
+      score = 0;
+      playerHealth = 100;
       // Game specific setup (e.g., reset player position, score = 0)
       if (DEBUG_MODE_ENABLED) {
         currentMiniGame = DEBUG_MINIGAME;
@@ -503,30 +563,29 @@ void doSettings() {
   arduboy.print(F("SETTINGS"));
   arduboy.drawFastHLine(0, 15, 128);
 
-  arduboy.setCursor(10, 30);
-  arduboy.print(F("Volume: "));
-  if (arduboy.audio.enabled()) {
-    arduboy.print(F("ON"));
-  } else {
-    arduboy.print(F("OFF"));
-  }
+  arduboy.setCursor(10, 25);
+  arduboy.print(F("Vol:"));
+  arduboy.print(arduboy.audio.enabled() ? F("ON") : F("OFF"));
 
-  arduboy.setCursor(10, 50);
-  arduboy.print(F("A: Toggle  B: Return"));
+  arduboy.setCursor(10, 38);
+  arduboy.print(currentGameMode == MODE_SURVIVAL ? F("Mode:SURVIVAL")
+                                                 : F("Mode:FREEPLAY"));
 
-  // Toggle logic
+  arduboy.setCursor(5, 54);
+  arduboy.print(F("A:Vol B:Mode <- Back"));
+
   if (arduboy.justPressed(A_BUTTON)) {
-    if (arduboy.audio.enabled()) {
+    if (arduboy.audio.enabled())
       arduboy.audio.off();
-      arduboy.audio.saveOnOff();
-    } else {
+    else
       arduboy.audio.on();
-      arduboy.audio.saveOnOff();
-    }
+    arduboy.audio.saveOnOff();
   }
-
-  // Transition logic: Back to main menu
   if (arduboy.justPressed(B_BUTTON)) {
+    currentGameMode =
+        (currentGameMode == MODE_SURVIVAL) ? MODE_FREEPLAY : MODE_SURVIVAL;
+  }
+  if (arduboy.justPressed(LEFT_BUTTON)) {
     gameState = STATE_MAIN_MENU;
   }
 }
@@ -535,6 +594,7 @@ unsigned long transitionStartTime = 0;
 void doTransition() {
   if (transitionStartTime == 0) {
     transitionStartTime = millis();
+    minigamePointsEarned = 0; // Reset per-minigame tracker
   }
 
   // Determine the word based on the selected minigame
@@ -561,10 +621,6 @@ void doTransition() {
   case GAME_SIMON:
     wordToDisplay = F("Repeat!");
     wordLength = 7;
-    break;
-  case GAME_ROCK:
-    wordToDisplay = F("Rock!");
-    wordLength = 5;
     break;
   case GAME_DUCK_HUNT:
     wordToDisplay = F("Hunt!");
@@ -610,10 +666,17 @@ void doTransition() {
 }
 
 void doGameplay() {
-  // score board remains up for all games
-  arduboy.setCursor(0, 0);
-  arduboy.print(F("Score: "));
-  arduboy.print(score);
+  if (currentGameMode == MODE_FREEPLAY) {
+    arduboy.setCursor(0, 0);
+    arduboy.print(F("Score: "));
+    arduboy.print(score);
+  } else {
+    // Health bar: outline box 52px wide, fill proportionally
+    arduboy.drawRect(0, 0, 52, 6);
+    uint8_t fillW = (uint8_t)((playerHealth * 50L) / 100);
+    if (fillW > 0)
+      arduboy.fillRect(1, 1, fillW, 4);
+  }
 
   switch (currentMiniGame) {
   case GAME_ARROWS:
@@ -630,9 +693,6 @@ void doGameplay() {
     break;
   case GAME_MARSHMALLOW_DROP:
     doMarshmallowDropGame();
-    break;
-  case GAME_ROCK:
-    doRockGame();
     break;
   case GAME_DUCK_HUNT:
     doDuckHuntGame();
@@ -653,29 +713,32 @@ void doGameplay() {
     doHurdlesGame();
     break;
   default:
-    // Should never happen, but useful for debugging
-    arduboy.print("ERROR STATE");
     break;
   }
 }
 
 void doGameOver() {
-  arduboy.setCursor(35, 20);
+  arduboy.setCursor(13, 20);
   arduboy.print(F("G A M E   O V E R"));
-  arduboy.setCursor(40, 40);
-  arduboy.print(F("Final Score: 12345"));
-  arduboy.setCursor(10, 50);
-  arduboy.print(F("Press A to return to Menu"));
 
-  // Transition logic: Back to main menu
+  if (currentGameMode == MODE_FREEPLAY) {
+    arduboy.setCursor(23, 38);
+    arduboy.print(F("Score: "));
+    arduboy.print(score);
+  } else {
+    arduboy.setCursor(5, 38);
+    arduboy.print(F("You ran out of HP!"));
+  }
+
+  arduboy.setCursor(10, 54);
+  arduboy.print(F("A: Back to Menu"));
+
   if (arduboy.justPressed(A_BUTTON)) {
     gameState = STATE_MAIN_MENU;
-    // Reset the menu option selection on return
     currentMenuOption = MENU_START_GAME;
+    score = 0;
+    playerHealth = 100;
   }
 }
 
-void checkTransition() {
-  // This function can be used to handle global transitions
-  // like pausing the game from any state.
-}
+void checkTransition() {}

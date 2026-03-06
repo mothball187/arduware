@@ -9,7 +9,12 @@ extern Arduboy2 arduboy;
 extern ArduboyTones sound;
 
 // Extern declarations for global game state
+enum GameMode { MODE_SURVIVAL, MODE_FREEPLAY };
+extern GameMode currentGameMode;
 extern int score;
+extern int playerHealth;
+extern int minigamePointsEarned;
+extern void addScore(int points);
 
 const int MAX_X_POS = 128;
 const int MAX_Y_POS = 64;
@@ -34,7 +39,6 @@ enum MiniGameState {
   GAME_SPOTLIGHT,
   GAME_MAKE_IT_HOT,
   GAME_MARSHMALLOW_DROP,
-  GAME_ROCK,
   GAME_DUCK_HUNT,
   GAME_SPACE_DODGE,
   GAME_LOCKPICK,

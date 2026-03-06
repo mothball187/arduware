@@ -64,7 +64,7 @@ void doLockpickGame() {
     lockpick_targetAngle = random(-70, 71);
 
     // Grant initial 100 points
-    score += 100;
+    addScore(100);
 
     lockpick_newGame = false;
   }
@@ -120,7 +120,7 @@ void doLockpickGame() {
   uint8_t currentSeconds = (uint8_t)(elapsed / 1000);
 
   if (currentSeconds > lockpick_lastScoreSecond && currentSeconds < 10) {
-    score = max(0, score - 10);
+    addScore(-10);
     turnOnLED(COLOR_RED, 250); // Flash red LED & play sound every second
     lockpick_lastScoreSecond = currentSeconds;
   }

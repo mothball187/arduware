@@ -125,7 +125,7 @@ void doMarshmallowDropGame() {
       if (mY + 6 >= mugY && mY < 64 && mX + 4 > md_mugX &&
           mX < md_mugX + md_mugW) {
         // Caught!
-        score += 10;
+        addScore(10);
         turnOnLED(COLOR_GREEN);
         md_marshmallows[i].active = false;
         md_resolvedCount++;

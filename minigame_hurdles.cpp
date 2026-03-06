@@ -164,7 +164,7 @@ void doHurdlesGame() {
   // SCORE LOGIC (Award point every 2s)
   if ((uint16_t)(currentMillis - hurdles_lastScoreTimer) >= 2000) {
     hurdles_lastScoreTimer += 2000;
-    score += 10;
+    addScore(10);
     turnOnLED(COLOR_GREEN, 100);
   }
 

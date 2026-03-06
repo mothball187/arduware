@@ -124,7 +124,7 @@ void doRockGame() {
   if (ShouldBeGreen) {
     arduboy.setRGBled(0, 255, 0);
     if (secondRolledOver) {
-      score += 10;
+      addScore(10);
       sound.tone(NOTE_C5, 100);
     }
   } else {

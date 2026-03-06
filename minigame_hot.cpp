@@ -91,7 +91,7 @@ void doMakeItHotGame() {
   if (current_section > makeItHot_sectionsPassed) {
     // Award 10 points for every new section reached live
     int sections_new = current_section - makeItHot_sectionsPassed;
-    score += (sections_new * 10);
+    addScore(sections_new * 10);
 
     makeItHot_sectionsPassed = current_section;
     turnOnLED(COLOR_GREEN, 1000);

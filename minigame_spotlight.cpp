@@ -89,7 +89,7 @@ void doSpotlightGame() {
     } else {
       // Every 500ms, add 10 points
       if (millis() - spotlightGame_overlapTime >= 500) {
-        score += 10;
+        addScore(10);
         sound.tone(1046, 100);
         spotlightGame_overlapTime += 500;
       }

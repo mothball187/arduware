@@ -123,7 +123,7 @@ void doSimonGame() {
     simonGameLightUp(pressed);
 
     if (pressed == simonGame_pattern[simonGame_playerIdx]) {
-      score += 10;
+      addScore(10);
       simonGame_playerIdx++;
       turnOnLED(COLOR_GREEN);
     } else if (pressed != simonGame_patternCount + 1) {

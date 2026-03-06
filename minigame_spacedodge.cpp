@@ -63,7 +63,7 @@ void doSpaceDodgeGame() {
     }
 
     // Grant initial 60 points
-    score += 60;
+    addScore(60);
 
     spaceDodge_newGame = false;
   }
@@ -137,7 +137,7 @@ void doSpaceDodgeGame() {
             (int16_t)asteroids[i].y + astMargin) {
 
       asteroids[i].hitPlayer = true;
-      score = max(0, score - 10);
+      addScore(-10);
       turnOnLED(COLOR_RED, 250); // Red LED and fail sound
     }
   }

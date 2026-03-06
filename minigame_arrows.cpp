@@ -95,7 +95,7 @@ void arrowsGameSpawnX(int i) {
   arrowsGame_XPos[2] = 0;
 }
 void arrowsGameHit(int i) {
-  score += 10;
+  addScore(10);
   arrowsGameSpawnBubble(i);
   arrowsGameDespawn(i);
 }
@@ -232,7 +232,7 @@ void doArrowsGame() {
       arrowsGame_XPos[0] = buttonX;
       arrowsGame_XPos[1] = arrowsGame_targetY;
       arrowsGame_XPos[2] = 0;
-      score = max(0, score - 5);
+      addScore(-5);
     }
   };
 

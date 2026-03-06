@@ -151,11 +151,11 @@ void doDuckHuntGame() {
     }
 
     if (hit) {
-      score += 10;
+      addScore(10);
       turnOnLED(COLOR_GREEN,
                 1000); // 1 second green LED with standard success sound
     } else {
-      score = max(0, score - 5);
+      addScore(-5);
       turnOnLED(COLOR_RED,
                 1000); // 1 second red LED with standard failure sound
     }
