@@ -33,7 +33,7 @@ void doRedLightGreenLightGame() {
     rlgl_stateTimer = currentMillis;
     rlgl_isGoMode = true;
     rlgl_playerX = 5;
-    rlgl_stateDuration = random(1000, 3001);
+    rlgl_stateDuration = random(500, 801); // Short first GO → early first stop
     rlgl_showTransitionText = true;
     rlgl_transitionDisplayTime = currentMillis;
     sound.tone(NOTE_C5, 200);
@@ -45,7 +45,9 @@ void doRedLightGreenLightGame() {
   if ((uint16_t)(currentMillis - rlgl_stateTimer) >= rlgl_stateDuration) {
     rlgl_isGoMode = !rlgl_isGoMode;
     rlgl_stateTimer = currentMillis;
-    rlgl_stateDuration = random(1000, 3001);
+    rlgl_stateDuration =
+        rlgl_isGoMode ? random(2000, 2501)  // GO: 2.0-2.5s window
+                      : random(1000, 2251); // STOP: 1.0-2.25s, unpredictable
     rlgl_showTransitionText = true;
     rlgl_transitionDisplayTime = currentMillis;
 
@@ -85,8 +87,8 @@ void doRedLightGreenLightGame() {
   bool isMoving = arduboy.pressed(A_BUTTON) || arduboy.pressed(B_BUTTON);
 
   if (isMoving) {
-    // Only move 1 pixel every 2 frames to simulate 50% speed
-    if (arduboy.frameCount % 2 == 0) {
+    // Move 5 out of every 8 frames = 0.625px/frame (~25% faster than original)
+    if (arduboy.frameCount % 8 < 5) {
       rlgl_playerX += 1;
     }
 

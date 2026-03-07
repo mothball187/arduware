@@ -126,7 +126,7 @@ void doHurdlesGame() {
   }
 
   // 2. Wait random interval to spawn next
-  if (canSpawn && random(0, 100) < 5) {
+  if (canSpawn && random(0, 100) < 12) {
     // Find the first empty array slot
     for (uint8_t i = 0; i < MAX_HURDLES; i++) {
       if (hurdles_obstacleType[i] == 0) {
