@@ -1,5 +1,6 @@
 #include <Arduboy2.h>
 #include <ArduboyTones.h>
+#include <EEPROM.h>
 #include <stdlib.h>
 
 #include "globals.h"
@@ -21,6 +22,7 @@ ArduboyTones sound(arduboy.audio.enabled);
 GameMode currentGameMode = MODE_SURVIVAL;
 int score = 0;
 int playerHealth = 100;
+int minigamesSurvived = 0;
 int minigamePointsEarned = 0;
 
 void addScore(int points) {
@@ -138,84 +140,6 @@ const uint8_t PROGMEM asteroid_16[] = {
     0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0x03, 0x0f, 0x1f, 0x3f, 0x7f, 0x7f,
     0x7f, 0xff, 0x7f, 0x7f, 0x3f, 0x3f, 0x1f, 0x0f, 0x0f, 0x03};
 
-const unsigned char PROGMEM bubbleburst[] = {
-
-    // width, height,
-    16, 16,
-    // FRAME 00
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 01
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x40, 0x40, 0xc0, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x02,
-    0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 02
-    0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x20, 0x20, 0x20, 0x20, 0xc0, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x04, 0x04,
-    0x04, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 03
-    0x00, 0x00, 0x00, 0x00, 0xc0, 0x30, 0x10, 0x10, 0x10, 0x10, 0x30, 0xc0,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x0c, 0x08, 0x08,
-    0x08, 0x08, 0x0c, 0x03, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 04
-    0x00, 0x00, 0x00, 0xc0, 0x20, 0x10, 0x08, 0x08, 0x08, 0x08, 0x10, 0x20,
-    0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x08, 0x10, 0x20, 0x20,
-    0x20, 0x20, 0x10, 0x08, 0x07, 0x00, 0x00, 0x00,
-    // FRAME 05
-    0x00, 0x00, 0xe0, 0x10, 0x08, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x08,
-    0x10, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x07, 0x08, 0x10, 0x20, 0x20, 0x20,
-    0x20, 0x20, 0x20, 0x10, 0x08, 0x07, 0x00, 0x00,
-    // FRAME 06
-    0x00, 0xf0, 0x08, 0x04, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
-    0x04, 0x08, 0xf0, 0x00, 0x00, 0x0f, 0x10, 0x20, 0x40, 0x40, 0x40, 0x40,
-    0x40, 0x40, 0x40, 0x40, 0x20, 0x10, 0x0f, 0x00,
-    // FRAME 07
-    0x00, 0x02, 0x06, 0x04, 0x0c, 0x08, 0x00, 0x00, 0x07, 0x00, 0x10, 0x18,
-    0x0c, 0x06, 0x02, 0x00, 0x01, 0x41, 0x21, 0x11, 0x11, 0x18, 0x00, 0x00,
-    0xf0, 0x00, 0x00, 0x19, 0x31, 0x61, 0x41, 0x01
-
-};
-
-const unsigned char PROGMEM bubbleburst_mask[] = {
-
-    // width, height,
-    16, 16,
-    // FRAME 00
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x80, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 01
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x40, 0x40, 0xc0, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x02,
-    0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 02
-    0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x20, 0x20, 0x20, 0x20, 0xc0, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x04, 0x04,
-    0x04, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 03
-    0x00, 0x00, 0x00, 0x00, 0xc0, 0x30, 0x10, 0x10, 0x10, 0x10, 0x30, 0xc0,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x0c, 0x08, 0x08,
-    0x08, 0x08, 0x0c, 0x03, 0x00, 0x00, 0x00, 0x00,
-    // FRAME 04
-    0x00, 0x00, 0x00, 0xc0, 0x20, 0x10, 0x08, 0x08, 0x08, 0x08, 0x10, 0x20,
-    0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x08, 0x10, 0x20, 0x20,
-    0x20, 0x20, 0x10, 0x08, 0x07, 0x00, 0x00, 0x00,
-    // FRAME 05
-    0x00, 0x00, 0xe0, 0x10, 0x08, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x08,
-    0x10, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x07, 0x08, 0x10, 0x20, 0x20, 0x20,
-    0x20, 0x20, 0x20, 0x10, 0x08, 0x07, 0x00, 0x00,
-    // FRAME 06
-    0x00, 0xf0, 0x08, 0x04, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
-    0x04, 0x08, 0xf0, 0x00, 0x00, 0x0f, 0x10, 0x20, 0x40, 0x40, 0x40, 0x40,
-    0x40, 0x40, 0x40, 0x40, 0x20, 0x10, 0x0f, 0x00,
-    // FRAME 07
-    0x00, 0x02, 0x06, 0x04, 0x0c, 0x08, 0x00, 0x00, 0x07, 0x00, 0x10, 0x18,
-    0x0c, 0x06, 0x02, 0x00, 0x01, 0x41, 0x21, 0x11, 0x11, 0x18, 0x00, 0x00,
-    0xf0, 0x00, 0x00, 0x19, 0x31, 0x61, 0x41, 0x01
-
-};
-
 const unsigned char PROGMEM X[] = {
 
     // width, height,
@@ -241,9 +165,18 @@ GameState gameState = STATE_SPLASH_SCREEN;
 enum MenuOption {
   MENU_START_GAME,
   MENU_SETTINGS,
-  MENU_QUIT, // For simplicity, this will transition to the Game Over screen
+  MENU_SCORES,
   NUM_MENU_OPTIONS
 };
+
+// --- EEPROM HIGH SCORE STORAGE ---
+// Addresses 400-405 (safe range, away from bootloader/Arduboy2 reserved areas)
+const int EE_ADDR_MAGIC = 400;    // 2 bytes: 0xAD 0xBE = valid data marker
+const int EE_ADDR_FREEPLAY = 402; // 2 bytes: best Free Play score
+const int EE_ADDR_SURVIVAL = 404; // 2 bytes: best Survival games survived
+
+int bestFreePlayScore = 0;
+int bestSurvivalScore = 0;
 
 // --- DEBUG VARIABLES ---
 bool DEBUG_MODE_ENABLED = false;
@@ -260,6 +193,7 @@ uint8_t playlistIndex = NUM_GAMES;
 void doSplashScreen();
 void doMainMenu();
 void doSettings();
+void doScores();
 void doGameplay();
 void doGameOver();
 void doMakeItHotGame();
@@ -325,9 +259,17 @@ void generatePlaylist(MiniGameState previousLastGame) {
 // --- ARDUINO SETUP ---
 void setup() {
   arduboy.begin();
-  arduboy.setFrameRate(30); // Use 30 FPS for stable state machine logic
+  arduboy.setFrameRate(30);
   arduboy.initRandomSeed();
-  arduboy.audio.on(); // explicitly force audio on
+  arduboy.audio.on();
+  // Load high scores from EEPROM if valid
+  if (EEPROM.read(EE_ADDR_MAGIC) == 0xAD &&
+      EEPROM.read(EE_ADDR_MAGIC + 1) == 0xBE) {
+    bestFreePlayScore = ((int)EEPROM.read(EE_ADDR_FREEPLAY) << 8) |
+                        EEPROM.read(EE_ADDR_FREEPLAY + 1);
+    bestSurvivalScore = ((int)EEPROM.read(EE_ADDR_SURVIVAL) << 8) |
+                        EEPROM.read(EE_ADDR_SURVIVAL + 1);
+  }
 }
 
 // --- ARDUINO LOOP: THE STATE MACHINE CORE ---
@@ -367,6 +309,9 @@ void loop() {
   case STATE_GAME_OVER:
     doGameOver();
     break;
+  case STATE_SCORES:
+    doScores();
+    break;
   default:
     break;
   }
@@ -382,8 +327,8 @@ void loop() {
 // --- STATE IMPLEMENTATION FUNCTIONS ---
 
 void doSplashScreen() {
-  arduboy.setCursor(20, 20);
-  arduboy.print(F("ELENA'S GAME"));
+  arduboy.setCursor(37, 20);
+  arduboy.print(F("ARDUWARE"));
   arduboy.setCursor(10, 40);
   arduboy.print(F("PRESS A/B TO START"));
 
@@ -414,6 +359,10 @@ static const uint8_t PROGMEM kMaxPts[] = {
 };
 // All games are now proportional (no binary games remaining after Rock removal)
 static const uint8_t PROGMEM kBinary[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+// Grace zone: earn >= 75% of max → no penalty; below 75% → scale from
+// threshold. Applied to games where perfect play is unrealistic (Spotlight,
+// Lockpick).
+static const uint8_t PROGMEM kGrace[] = {0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0};
 
 void processMinigameEnd() {
   if (currentGameMode != MODE_SURVIVAL)
@@ -427,15 +376,21 @@ void processMinigameEnd() {
   if (maxPoints <= 0)
     return;
 
+  int earned = minigamePointsEarned;
+  if (earned < 0)
+    earned = 0;
+  if (earned > maxPoints)
+    earned = maxPoints;
+
   int healthToDeduct;
   if (pgm_read_byte(&kBinary[idx])) {
-    healthToDeduct = (minigamePointsEarned >= maxPoints) ? 0 : 10;
+    healthToDeduct = (earned >= maxPoints) ? 0 : 10;
+  } else if (pgm_read_byte(&kGrace[idx])) {
+    // No penalty above 75% of max; scale proportionally below that threshold
+    int threshold = (maxPoints * 3) / 4;
+    healthToDeduct =
+        (earned >= threshold) ? 0 : ((threshold - earned) * 50) / threshold;
   } else {
-    int earned = minigamePointsEarned;
-    if (earned < 0)
-      earned = 0;
-    if (earned > maxPoints)
-      earned = maxPoints;
     healthToDeduct = ((maxPoints - earned) * 50) / maxPoints;
   }
 
@@ -455,6 +410,7 @@ void doIntermission() {
       gameState = STATE_GAME_OVER;
       return;
     }
+    minigamesSurvived++;
   }
   arduboy.setCursor(25, MAX_Y_POS / 2 - 10);
   arduboy.print(F("Intermission"));
@@ -524,8 +480,8 @@ void doMainMenu() {
     case MENU_SETTINGS:
       arduboy.print(F("SETTINGS"));
       break;
-    case MENU_QUIT:
-      arduboy.print(F("QUIT"));
+    case MENU_SCORES:
+      arduboy.print(F("SCORES"));
       break;
     }
   }
@@ -540,6 +496,7 @@ void doMainMenu() {
       gameState = STATE_TRANSITION;
       score = 0;
       playerHealth = 100;
+      minigamesSurvived = 0;
       // Game specific setup (e.g., reset player position, score = 0)
       if (DEBUG_MODE_ENABLED) {
         currentMiniGame = DEBUG_MINIGAME;
@@ -551,8 +508,8 @@ void doMainMenu() {
     case MENU_SETTINGS:
       gameState = STATE_SETTINGS;
       break;
-    case MENU_QUIT:
-      gameState = STATE_GAME_OVER;
+    case MENU_SCORES:
+      gameState = STATE_SCORES;
       break;
     }
   }
@@ -718,6 +675,27 @@ void doGameplay() {
 }
 
 void doGameOver() {
+  // Save high scores on first frame (when just entered this state)
+  static bool didSave = false;
+  if (!didSave) {
+    if (currentGameMode == MODE_FREEPLAY && score > bestFreePlayScore) {
+      bestFreePlayScore = score;
+      EEPROM.update(EE_ADDR_MAGIC, 0xAD);
+      EEPROM.update(EE_ADDR_MAGIC + 1, 0xBE);
+      EEPROM.update(EE_ADDR_FREEPLAY, (uint8_t)(bestFreePlayScore >> 8));
+      EEPROM.update(EE_ADDR_FREEPLAY + 1, (uint8_t)(bestFreePlayScore & 0xFF));
+    }
+    if (currentGameMode == MODE_SURVIVAL &&
+        minigamesSurvived > bestSurvivalScore) {
+      bestSurvivalScore = minigamesSurvived;
+      EEPROM.update(EE_ADDR_MAGIC, 0xAD);
+      EEPROM.update(EE_ADDR_MAGIC + 1, 0xBE);
+      EEPROM.update(EE_ADDR_SURVIVAL, (uint8_t)(bestSurvivalScore >> 8));
+      EEPROM.update(EE_ADDR_SURVIVAL + 1, (uint8_t)(bestSurvivalScore & 0xFF));
+    }
+    didSave = true;
+  }
+
   arduboy.setCursor(13, 20);
   arduboy.print(F("G A M E   O V E R"));
 
@@ -727,18 +705,41 @@ void doGameOver() {
     arduboy.print(score);
   } else {
     arduboy.setCursor(5, 38);
-    arduboy.print(F("You ran out of HP!"));
+    arduboy.print(F("Games survived: "));
+    arduboy.print(minigamesSurvived);
   }
 
   arduboy.setCursor(10, 54);
-  arduboy.print(F("A: Back to Menu"));
+  arduboy.print(F("A: Menu"));
 
   if (arduboy.justPressed(A_BUTTON)) {
+    didSave = false;
     gameState = STATE_MAIN_MENU;
     currentMenuOption = MENU_START_GAME;
     score = 0;
     playerHealth = 100;
+    minigamesSurvived = 0;
   }
 }
 
-void checkTransition() {}
+void doScores() {
+  arduboy.setCursor(30, 5);
+  arduboy.print(F("BEST SCORES"));
+  arduboy.drawFastHLine(0, 15, 128);
+  arduboy.setCursor(5, 22);
+  arduboy.print(F("Free Play: "));
+  if (bestFreePlayScore > 0)
+    arduboy.print(bestFreePlayScore);
+  else
+    arduboy.print(F("--"));
+  arduboy.setCursor(5, 38);
+  arduboy.print(F("Survival: "));
+  if (bestSurvivalScore > 0)
+    arduboy.print(bestSurvivalScore);
+  else
+    arduboy.print(F("--"));
+  arduboy.setCursor(5, 54);
+  arduboy.print(F("A: Back"));
+  if (arduboy.justPressed(A_BUTTON | B_BUTTON))
+    gameState = STATE_MAIN_MENU;
+}

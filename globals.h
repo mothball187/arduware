@@ -13,6 +13,7 @@ enum GameMode { MODE_SURVIVAL, MODE_FREEPLAY };
 extern GameMode currentGameMode;
 extern int score;
 extern int playerHealth;
+extern int minigamesSurvived;
 extern int minigamePointsEarned;
 extern void addScore(int points);
 
@@ -28,6 +29,7 @@ enum GameState {
   STATE_GAMEPLAY,   // The main action screen
   STATE_SETTINGS,   // A simple options screen
   STATE_GAME_OVER,  // End screen
+  STATE_SCORES,     // High score screen
   NUM_GAME_STATES   // Total count of states (must be last)
 };
 
@@ -80,8 +82,6 @@ extern const uint8_t PROGMEM asteroid_4[];
 extern const uint8_t PROGMEM asteroid_8[];
 extern const uint8_t PROGMEM asteroid_12[];
 extern const uint8_t PROGMEM asteroid_16[];
-extern const unsigned char PROGMEM bubbleburst[];
-extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
 extern const unsigned char PROGMEM smiley_face[];
 

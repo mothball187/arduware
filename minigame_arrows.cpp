@@ -13,8 +13,6 @@ extern const uint8_t PROGMEM up_arrow_hollow[];
 extern const uint8_t PROGMEM a_button[];
 extern const uint8_t PROGMEM b_button[];
 extern const uint8_t PROGMEM button_filled[];
-extern const unsigned char PROGMEM bubbleburst[];
-extern const unsigned char PROGMEM bubbleburst_mask[];
 extern const unsigned char PROGMEM X[];
 
 uint16_t arrowsGame_lastSpawnTime = 0;
@@ -42,23 +40,11 @@ struct FallingArrow {
 
 FallingArrow arrowsGame_arrows[MAX_ACTIVE_ARROWS];
 // x,y,frame (4 frames)
-int16_t arrowsGame_bubblePos[] = {-1, -1, 0};
 int16_t arrowsGame_XPos[] = {-1, -1, 0};
 
 void arrowsGameAnimateSprites() {
-  if (arrowsGame_bubblePos[0] >= 0) {
-    if (arrowsGame_bubblePos[2] < 7) {
-      Sprites::drawExternalMask(
-          arrowsGame_bubblePos[0], arrowsGame_bubblePos[1], bubbleburst,
-          bubbleburst_mask, arrowsGame_bubblePos[2], arrowsGame_bubblePos[2]);
-      arrowsGame_bubblePos[2] += 1;
-    } else {
-      arrowsGame_bubblePos[0] = -1;
-      arrowsGame_bubblePos[1] = -1;
-      arrowsGame_bubblePos[2] = 0;
-    }
-  } else if (arrowsGame_XPos[0] >= 0) {
-    if (arrowsGame_XPos[2] / 2 < 1) { // 2 == hold length
+  if (arrowsGame_XPos[0] >= 0) {
+    if (arrowsGame_XPos[2] / 2 < 1) {
       Sprites::drawExternalMask(arrowsGame_XPos[0], arrowsGame_XPos[1], X, X,
                                 arrowsGame_XPos[2] / 2, arrowsGame_XPos[2] / 2);
       arrowsGame_XPos[2] += 1;
@@ -84,11 +70,6 @@ void arrowsGameSpawn(int16_t x, uint8_t target) {
   }
 }
 void arrowsGameDespawn(int i) { arrowsGame_arrows[i].active = false; }
-void arrowsGameSpawnBubble(int i) {
-  arrowsGame_bubblePos[0] = arrowsGame_arrows[i].x;
-  arrowsGame_bubblePos[1] = (int16_t)arrowsGame_arrows[i].y;
-  arrowsGame_bubblePos[2] = 0;
-}
 void arrowsGameSpawnX(int i) {
   arrowsGame_XPos[0] = arrowsGame_arrows[i].x;
   arrowsGame_XPos[1] = (int16_t)arrowsGame_arrows[i].y;
@@ -96,7 +77,6 @@ void arrowsGameSpawnX(int i) {
 }
 void arrowsGameHit(int i) {
   addScore(10);
-  arrowsGameSpawnBubble(i);
   arrowsGameDespawn(i);
 }
 
@@ -109,7 +89,7 @@ void doArrowsGame() {
   }
 
   if (arrowsGame_spawnTotal >= arrowsGame_numArrows && !anyActive &&
-      arrowsGame_bubblePos[0] == -1 && arrowsGame_XPos[0] == -1) {
+      arrowsGame_XPos[0] == -1) {
     for (int i = 0; i < MAX_ACTIVE_ARROWS; i++)
       arrowsGameDespawn(i);
     arrowsGame_spawnTotal = 0;
