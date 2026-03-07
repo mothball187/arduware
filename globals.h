@@ -9,7 +9,7 @@ extern Arduboy2 arduboy;
 extern ArduboyTones sound;
 
 // Extern declarations for global game state
-enum GameMode { MODE_SURVIVAL, MODE_FREEPLAY };
+enum GameMode { MODE_SURVIVAL, MODE_SCORE };
 extern GameMode currentGameMode;
 extern int score;
 extern int playerHealth;

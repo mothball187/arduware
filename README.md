@@ -26,9 +26,9 @@ Instead of tracking a score, you start with a **full health bar** displayed at t
 
 Toggle between modes in the **Settings** menu.
 
-### 🔵 Free Play Mode
+### 🔵 Score Mode
 
-The classic mode. Every minigame awards points and the game never ends — just keep racking up your score!
+The classic mode. Every minigame awards points and the game ends after playing through all the minigames.
 
 ---
 

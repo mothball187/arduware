@@ -26,7 +26,7 @@ int minigamesSurvived = 0;
 int minigamePointsEarned = 0;
 
 void addScore(int points) {
-  if (currentGameMode == MODE_FREEPLAY) {
+  if (currentGameMode == MODE_SCORE) {
     score += points;
     if (score < 0)
       score = 0;
@@ -172,10 +172,10 @@ enum MenuOption {
 // --- EEPROM HIGH SCORE STORAGE ---
 // Addresses 400-405 (safe range, away from bootloader/Arduboy2 reserved areas)
 const int EE_ADDR_MAGIC = 400;    // 2 bytes: 0xAD 0xBE = valid data marker
-const int EE_ADDR_FREEPLAY = 402; // 2 bytes: best Free Play score
+const int EE_ADDR_SCORE = 402;    // 2 bytes: best Score Mode score
 const int EE_ADDR_SURVIVAL = 404; // 2 bytes: best Survival games survived
 
-int bestFreePlayScore = 0;
+int bestScoreModeScore = 0;
 int bestSurvivalScore = 0;
 
 // --- DEBUG VARIABLES ---
@@ -265,8 +265,8 @@ void setup() {
   // Load high scores from EEPROM if valid
   if (EEPROM.read(EE_ADDR_MAGIC) == 0xAD &&
       EEPROM.read(EE_ADDR_MAGIC + 1) == 0xBE) {
-    bestFreePlayScore = ((int)EEPROM.read(EE_ADDR_FREEPLAY) << 8) |
-                        EEPROM.read(EE_ADDR_FREEPLAY + 1);
+    bestScoreModeScore =
+        ((int)EEPROM.read(EE_ADDR_SCORE) << 8) | EEPROM.read(EE_ADDR_SCORE + 1);
     bestSurvivalScore = ((int)EEPROM.read(EE_ADDR_SURVIVAL) << 8) |
                         EEPROM.read(EE_ADDR_SURVIVAL + 1);
   }
@@ -432,6 +432,11 @@ void doIntermission() {
       currentMiniGame = DEBUG_MINIGAME;
     } else {
       if (playlistIndex >= NUM_GAMES) {
+        if (currentGameMode == MODE_SCORE) {
+          intermissionTime = 0;
+          gameState = STATE_GAME_OVER;
+          return;
+        }
         generatePlaylist(currentMiniGame);
       }
       currentMiniGame = gamePlaylist[playlistIndex++];
@@ -526,7 +531,7 @@ void doSettings() {
 
   arduboy.setCursor(10, 38);
   arduboy.print(currentGameMode == MODE_SURVIVAL ? F("Mode:SURVIVAL")
-                                                 : F("Mode:FREEPLAY"));
+                                                 : F("Mode:SCORE"));
 
   arduboy.setCursor(5, 54);
   arduboy.print(F("A:Vol B:Mode <- Back"));
@@ -540,7 +545,7 @@ void doSettings() {
   }
   if (arduboy.justPressed(B_BUTTON)) {
     currentGameMode =
-        (currentGameMode == MODE_SURVIVAL) ? MODE_FREEPLAY : MODE_SURVIVAL;
+        (currentGameMode == MODE_SURVIVAL) ? MODE_SCORE : MODE_SURVIVAL;
   }
   if (arduboy.justPressed(LEFT_BUTTON)) {
     gameState = STATE_MAIN_MENU;
@@ -623,7 +628,7 @@ void doTransition() {
 }
 
 void doGameplay() {
-  if (currentGameMode == MODE_FREEPLAY) {
+  if (currentGameMode == MODE_SCORE) {
     arduboy.setCursor(0, 0);
     arduboy.print(F("Score: "));
     arduboy.print(score);
@@ -678,12 +683,12 @@ void doGameOver() {
   // Save high scores on first frame (when just entered this state)
   static bool didSave = false;
   if (!didSave) {
-    if (currentGameMode == MODE_FREEPLAY && score > bestFreePlayScore) {
-      bestFreePlayScore = score;
+    if (currentGameMode == MODE_SCORE && score > bestScoreModeScore) {
+      bestScoreModeScore = score;
       EEPROM.update(EE_ADDR_MAGIC, 0xAD);
       EEPROM.update(EE_ADDR_MAGIC + 1, 0xBE);
-      EEPROM.update(EE_ADDR_FREEPLAY, (uint8_t)(bestFreePlayScore >> 8));
-      EEPROM.update(EE_ADDR_FREEPLAY + 1, (uint8_t)(bestFreePlayScore & 0xFF));
+      EEPROM.update(EE_ADDR_SCORE, (uint8_t)(bestScoreModeScore >> 8));
+      EEPROM.update(EE_ADDR_SCORE + 1, (uint8_t)(bestScoreModeScore & 0xFF));
     }
     if (currentGameMode == MODE_SURVIVAL &&
         minigamesSurvived > bestSurvivalScore) {
@@ -699,7 +704,7 @@ void doGameOver() {
   arduboy.setCursor(13, 20);
   arduboy.print(F("G A M E   O V E R"));
 
-  if (currentGameMode == MODE_FREEPLAY) {
+  if (currentGameMode == MODE_SCORE) {
     arduboy.setCursor(23, 38);
     arduboy.print(F("Score: "));
     arduboy.print(score);
@@ -727,9 +732,9 @@ void doScores() {
   arduboy.print(F("BEST SCORES"));
   arduboy.drawFastHLine(0, 15, 128);
   arduboy.setCursor(5, 22);
-  arduboy.print(F("Free Play: "));
-  if (bestFreePlayScore > 0)
-    arduboy.print(bestFreePlayScore);
+  arduboy.print(F("Score Mode: "));
+  if (bestScoreModeScore > 0)
+    arduboy.print(bestScoreModeScore);
   else
     arduboy.print(F("--"));
   arduboy.setCursor(5, 38);
