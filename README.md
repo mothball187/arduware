@@ -1,3 +1,5 @@
+<img src="arduware_title.png" width="768">
+
 # ArduWare
 
 A fast-paced Arduboy minigame collection in the style of WarioWare. You'll be thrown into a rapid sequence of short, frantic minigames — each lasting only a few seconds. React fast and do well!
