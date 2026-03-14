@@ -13,7 +13,6 @@ extern const uint8_t PROGMEM up_arrow_hollow[];
 extern const uint8_t PROGMEM a_button[];
 extern const uint8_t PROGMEM b_button[];
 extern const uint8_t PROGMEM button_filled[];
-extern const unsigned char PROGMEM X[];
 
 uint16_t arrowsGame_lastSpawnTime = 0;
 uint16_t arrowsGame_nextSpawnDelay = 1000;
@@ -43,17 +42,7 @@ FallingArrow arrowsGame_arrows[MAX_ACTIVE_ARROWS];
 int16_t arrowsGame_XPos[] = {-1, -1, 0};
 
 void arrowsGameAnimateSprites() {
-  if (arrowsGame_XPos[0] >= 0) {
-    if (arrowsGame_XPos[2] / 2 < 1) {
-      Sprites::drawExternalMask(arrowsGame_XPos[0], arrowsGame_XPos[1], X, X,
-                                arrowsGame_XPos[2] / 2, arrowsGame_XPos[2] / 2);
-      arrowsGame_XPos[2] += 1;
-    } else {
-      arrowsGame_XPos[0] = -1;
-      arrowsGame_XPos[1] = -1;
-      arrowsGame_XPos[2] = 0;
-    }
-  }
+  // Animation logic for missed hits removed to save space
 }
 
 void arrowsGameSpawn(int16_t x, uint8_t target) {
@@ -208,10 +197,6 @@ void doArrowsGame() {
     }
     if (!hit) {
       turnOnLED(COLOR_RED);
-      // Spawn an X at the empty button target
-      arrowsGame_XPos[0] = buttonX;
-      arrowsGame_XPos[1] = arrowsGame_targetY;
-      arrowsGame_XPos[2] = 0;
       addScore(-5);
     }
   };

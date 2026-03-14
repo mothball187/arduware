@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 #include <stdlib.h>
 
+#include "arduware_title_compressed.h"
 #include "globals.h"
 #include "minigame_arrows.h"
 #include "minigame_colorgrid.h"
@@ -24,6 +25,7 @@ int score = 0;
 int playerHealth = 100;
 int minigamesSurvived = 0;
 int minigamePointsEarned = 0;
+uint8_t exitTimer = 0;
 
 void addScore(int points) {
   if (currentGameMode == MODE_SCORE) {
@@ -139,17 +141,6 @@ const uint8_t PROGMEM asteroid_16[] = {
     16,   16,   0xe0, 0xf8, 0xfc, 0xfe, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff,
     0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0x03, 0x0f, 0x1f, 0x3f, 0x7f, 0x7f,
     0x7f, 0xff, 0x7f, 0x7f, 0x3f, 0x3f, 0x1f, 0x0f, 0x0f, 0x03};
-
-const unsigned char PROGMEM X[] = {
-
-    // width, height,
-    16, 16,
-    // FRAME 00
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x80, 0x40, 0x20, 0x10,
-    0x08, 0x04, 0x02, 0x01, 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01,
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
-
-};
 
 const unsigned char PROGMEM smiley_face[] = {
     // width, height,
@@ -281,6 +272,16 @@ void loop() {
   arduboy.clear();
   arduboy.pollButtons();
 
+  // Handle flashcart menu return (UP+DOWN for 2 seconds / 60 frames @ 30fps)
+  if (arduboy.pressed(UP_BUTTON) && arduboy.pressed(DOWN_BUTTON)) {
+    exitTimer++;
+    if (exitTimer >= 60) {
+      Arduboy2Core::exitToBootloader();
+    }
+  } else {
+    exitTimer = 0;
+  }
+
   // Check LED timeout
   if (isLedOn && (millis() - ledTurnOnTime >= currentLedDuration)) {
     turnOffLED();
@@ -327,10 +328,7 @@ void loop() {
 // --- STATE IMPLEMENTATION FUNCTIONS ---
 
 void doSplashScreen() {
-  arduboy.setCursor(37, 20);
-  arduboy.print(F("ARDUWARE"));
-  arduboy.setCursor(10, 40);
-  arduboy.print(F("PRESS A/B TO START"));
+  arduboy.drawCompressed(0, 0, arduware_title_compressed);
 
   // Transition logic for this state: wait for a button press
   if (arduboy.justPressed(A_BUTTON | B_BUTTON)) {
@@ -357,8 +355,6 @@ static const uint8_t PROGMEM kMaxPts[] = {
     100, // GAME_RED_LIGHT_GREEN_LIGHT (win=100; fail/timeout capped at 100)
     50,  // GAME_HURDLES        (10s game, +10 every 2s = 5 ticks max)
 };
-// All games are now proportional (no binary games remaining after Rock removal)
-static const uint8_t PROGMEM kBinary[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 // Grace zone: earn >= 75% of max → no penalty; below 75% → scale from
 // threshold. Applied to games where perfect play is unrealistic (Spotlight,
 // Lockpick).
@@ -383,9 +379,7 @@ void processMinigameEnd() {
     earned = maxPoints;
 
   int healthToDeduct;
-  if (pgm_read_byte(&kBinary[idx])) {
-    healthToDeduct = (earned >= maxPoints) ? 0 : 10;
-  } else if (pgm_read_byte(&kGrace[idx])) {
+  if (pgm_read_byte(&kGrace[idx])) {
     // No penalty above 75% of max; scale proportionally below that threshold
     int threshold = (maxPoints * 3) / 4;
     healthToDeduct =
@@ -559,66 +553,36 @@ void doTransition() {
     minigamePointsEarned = 0; // Reset per-minigame tracker
   }
 
-  // Determine the word based on the selected minigame
-  const __FlashStringHelper *wordToDisplay;
-  uint8_t wordLength = 0;
+  // Space-efficient string table for minigame prompts
+  static const char s0[] PROGMEM = "Buttons!";
+  static const char s1[] PROGMEM = "Repeat!";
+  static const char s2[] PROGMEM = "Chase!";
+  static const char s3[] PROGMEM = "Smash!";
+  static const char s4[] PROGMEM = "Catch!";
+  static const char s5[] PROGMEM = "Hunt!";
+  static const char s6[] PROGMEM = "Dodge!";
+  static const char s7[] PROGMEM = "Pick!";
+  static const char s8[] PROGMEM = "Colors!";
+  static const char s9[] PROGMEM = "Run!";
+  static const char s10[] PROGMEM = "Jump!";
+  static const char sDefault[] PROGMEM = "Get Ready!";
 
-  switch (currentMiniGame) {
-  case GAME_ARROWS:
-    wordToDisplay = F("Buttons!");
-    wordLength = 8;
-    break;
-  case GAME_MAKE_IT_HOT:
-    wordToDisplay = F("Smash!");
-    wordLength = 6;
-    break;
-  case GAME_MARSHMALLOW_DROP:
-    wordToDisplay = F("Catch!");
-    wordLength = 6;
-    break;
-  case GAME_SPOTLIGHT:
-    wordToDisplay = F("Chase!");
-    wordLength = 6;
-    break;
-  case GAME_SIMON:
-    wordToDisplay = F("Repeat!");
-    wordLength = 7;
-    break;
-  case GAME_DUCK_HUNT:
-    wordToDisplay = F("Hunt!");
-    wordLength = 5;
-    break;
-  case GAME_SPACE_DODGE:
-    wordToDisplay = F("Dodge!");
-    wordLength = 6;
-    break;
-  case GAME_LOCKPICK:
-    wordToDisplay = F("Pick!");
-    wordLength = 5;
-    break;
-  case GAME_COLORGRID:
-    wordToDisplay = F("Colors!");
-    wordLength = 7;
-    break;
-  case GAME_RED_LIGHT_GREEN_LIGHT:
-    wordToDisplay = F("Run!");
-    wordLength = 4;
-    break;
-  case GAME_HURDLES:
-    wordToDisplay = F("Jump!");
-    wordLength = 5;
-    break;
-  default:
-    wordToDisplay = F("Get Ready!");
-    wordLength = 10;
-    break;
+  static const char *const stringTable[] PROGMEM = {s0, s1, s2, s3, s4, s5,
+                                                    s6, s7, s8, s9, s10};
+
+  char buffer[16];
+  if (currentMiniGame < NUM_GAMES) {
+    strcpy_P(buffer, (char *)pgm_read_word(&(stringTable[currentMiniGame])));
+  } else {
+    strcpy_P(buffer, sDefault);
   }
 
-  // Draw the word centered
-  // Arduboy standard font characters are 6 pixels wide (5px char + 1px space)
+  uint8_t wordLength = strlen(buffer);
   uint8_t textWidth = wordLength * 6;
   arduboy.setCursor((MAX_X_POS - textWidth) / 2, MAX_Y_POS / 2 - 4);
-  arduboy.print(wordToDisplay);
+  arduboy.print(buffer);
+
+  // Wait for 2 seconds (2000 milliseconds)
 
   // Wait for 2 seconds (2000 milliseconds)
   if (millis() - transitionStartTime >= 2000) {

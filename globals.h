@@ -82,7 +82,6 @@ extern const uint8_t PROGMEM asteroid_4[];
 extern const uint8_t PROGMEM asteroid_8[];
 extern const uint8_t PROGMEM asteroid_12[];
 extern const uint8_t PROGMEM asteroid_16[];
-extern const unsigned char PROGMEM X[];
 extern const unsigned char PROGMEM smiley_face[];
 
 #endif
